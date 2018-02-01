@@ -4,6 +4,12 @@ import json
 import hashlib
 import hmac
 from time import time
+try:
+    #python2
+    from urllib import urlencode
+except ImportError:
+    #python3
+    from urllib.parse import urlencode
 class poloniexUtil:
 	def __init__(self):
 		pass
@@ -25,7 +31,8 @@ class poloniexUtil:
 			url = 'https://poloniex.com/tradingApi'
 			r = requests.post(url, headers=headers, data=paybytes)
 			return json.loads(r.text)
-		except Exception e:
+		except Exception as e:
+			print(e)
 			return None
 	def getWallet(self):
 		res=self.generatPoloniexParam('returnBalances')

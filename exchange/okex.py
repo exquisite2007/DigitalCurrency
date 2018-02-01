@@ -2,6 +2,7 @@
 import requests
 import json
 import hashlib
+
 class okexUtil:
 	def __init__(self):
 		pass
@@ -10,13 +11,13 @@ class okexUtil:
 
 	def generateOkParam(self,paramDict,secret_key):
 		res= None
-		for key in sorted(paramDict.iterkeys()):
+		for key in sorted(paramDict.keys()):
 			if res is  None:
 				res=key+'='+str(paramDict[key])
 			else:
 				res+='&'+key+'='+str(paramDict[key])
 		m=hashlib.md5()
-		m.update(res+'&secret_key='+secret_key)
+		m.update((res+'&secret_key='+secret_key).encode('utf-8'))
 		sign=m.hexdigest().upper()
 		paramDict['sign'] = sign
 	def OkRequest(self,params):
