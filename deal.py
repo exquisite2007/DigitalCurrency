@@ -5,27 +5,30 @@ import websockets
 import json
 import requests
 wallet={}
-BOOK_LIMIT=2
+BOOK_LIMIT=5
 poloniex_book={}
 okex_book={}
 async def okex():
-	async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
-		param={'event':'addChannel','channel':'ok_sub_spot_etc_usdt_depth_5'}
-
-		await websocket.send(json.dumps(param))
-		while True:
-			message = await websocket.recv()
-			res=json.loads(message)
-			if type(res) is list and res[0]['channel'].startswith('ok'):
-				ask_map={}
-				for item in res[0]['data']['asks']:
-					ask_map[item[0]]=item[1]
-				okex_book['ask']=ask_map
-				bid_map={}
-				for item in res[0]['data']['bids']:
-					bid_map[item[0]]=item[1]
-				okex_book['bid']=bid_map
-			makeDecision()
+	while True:
+		try:
+			async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
+				param={'event':'addChannel','channel':'ok_sub_spot_etc_usdt_depth_5'}
+				await websocket.send(json.dumps(param))
+				while True:
+					message = await websocket.recv()
+					res=json.loads(message)
+					if type(res) is list and res[0]['channel'].startswith('ok'):
+						ask_map={}
+						for item in res[0]['data']['asks']:
+							ask_map[item[0]]=item[1]
+						okex_book['ask']=ask_map
+						bid_map={}
+						for item in res[0]['data']['bids']:
+							bid_map[item[0]]=item[1]
+						okex_book['bid']=bid_map
+					makeDecision()
+		except  Exception as e:
+			print('Error happen in okex')
 
 async def poloniex():
 	async with websockets.connect('wss://api2.poloniex.com/') as websocket:
@@ -65,16 +68,18 @@ async def poloniex():
 def initWallet():
 	pass
 def makeDecision():
-	ok_ask_head=min(okex_book['ask'])
-	ok_bid_head=max(okex_book['bid'])	
-	# print("okex < ask {}:{} ,bid {}:{}".format(ask_head,okex_book['ask'][ask_head],bid_head,okex_book['bid'][bid_head]))
-	poloniex_ask_head=min(poloniex_book['ask'])
-	poloniex_bid_head=max(poloniex_book['bid'])
-	# print("poloniex< ask {}:{} ,bid {}:{}".format(ask_head,poloniex_book['ask'][ask_head],bid_head,poloniex_book['bid'][bid_head]))
+	if len(okex_book)>0:
+		ok_ask_head=min(okex_book['ask'],key=lambda subItem:float(subItem))
+		ok_bid_head=max(okex_book['bid'],key=lambda subItem:float(subItem))
+		print("okex < ask {}:{} ,bid {}:{}".format(ok_ask_head,okex_book['ask'][ok_ask_head],ok_bid_head,okex_book['bid'][ok_bid_head]))
+	if len(poloniex_book)>0:
+		poloniex_ask_head=min(poloniex_book['ask'],key=lambda subItem:float(subItem))
+		poloniex_bid_head=max(poloniex_book['bid'],key=lambda subItem:float(subItem))
+		print("poloniex< ask {}:{} ,bid {}:{}".format(poloniex_ask_head,poloniex_book['ask'][poloniex_ask_head],poloniex_bid_head,poloniex_book['bid'][poloniex_bid_head]))
 
 
 
 async def handler():
-	return await asyncio.wait([poloniex()],return_when=asyncio.FIRST_COMPLETED,)
+	return await asyncio.wait([okex(),poloniex()],return_when=asyncio.FIRST_COMPLETED,)
 loop=asyncio.get_event_loop()
 loop.run_until_complete(handler())
