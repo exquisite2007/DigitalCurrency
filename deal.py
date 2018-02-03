@@ -108,6 +108,47 @@ def makeDecision():
 		poloniex_ask_head=min(poloniex_book['ask'],key=lambda subItem:float(subItem))
 		poloniex_bid_head=max(poloniex_book['bid'],key=lambda subItem:float(subItem))
 		logger.debug("poloniex< ask {}:{} ,bid {}:{}".format(poloniex_ask_head,poloniex_book['ask'][poloniex_ask_head],poloniex_bid_head,poloniex_book['bid'][poloniex_bid_head]))
+		
+		ok_buy_profit=poloniex_bid_head-ok_ask_head-(poloniex_bid_head*0.0025+ok_ask_head*0.001)
+		if ok_buy_profit>0.15:
+			logger.debug('over ok_buy threshold')
+			min_maket_volume=min(float(poloniex_book['bid'][poloniex_bid_head]),okex_book['ask'][ok_ask_head])
+			min_wallet_volume=min(wallet['okex']['USDT']['free']/ok_ask_head,wallet['poloniex']['ETC']['free'])
+			min_volume=min(min_wallet_volume,min_maket_volume)
+			if min_volume< 0.00001:
+				logger.debug('no enough volume for trade in ok buy,give up')
+			else:
+				usd_volume=min_volume*ok_ask_head
+				wallet['okex']['USDT']['free']-=usd_volume
+				wallet['okex']['USDT']['locked']+=usd_volume
+				wallet['poloniex']['ETC']['free']-=min_volume
+				wallet['poloniex']['ETC']['locked']+=min_volume
+				loop=asyncio.get_event_loop()
+				future1 = loop.run_in_executor(None, okexUtil.buy,'etc_usdt',ok_ask_head,min_volume)
+				future2 = loop.run_in_executor(None, poloniexUtil.sell,'USDT_ETC',poloniex_bid_head,min_volume)
+				response1 = yield from future1
+				response2 = yield from future2
+				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet))
+
+		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.001)
+		if poloniex_buy_profit>-0.03:
+			min_maket_volume=min(float(poloniex_book['ask'][poloniex_ask_head]),okex_book['bid'][ok_bid_head])
+			min_wallet_volume=min(wallet['okex']['ETC']['free'],wallet['poloniex']['USDT']['free']/poloniex_ask_head)
+			min_volume=min(min_wallet_volume,min_maket_volume)
+			if min_volume< 0.00001:
+				logger.debug('no enough volume for trade in ok buy,give up')
+			else:
+				usd_volume=min_volume*poloniex_ask_head
+				wallet['poloniex']['USDT']['free']-=usd_volume
+				wallet['poloniex']['USDT']['locked']+=usd_volume
+				wallet['okex']['ETC']['free']-=min_volume
+				wallet['okex']['ETC']['locked']+=min_volume
+				loop=asyncio.get_event_loop()
+				future1 = loop.run_in_executor(None, okexUtil.buy,'etc_usdt',ok_ask_head,min_volume)
+				future2 = loop.run_in_executor(None, poloniexUtil.sell,'USDT_ETC',poloniex_bid_head,min_volume)
+				response1 = yield from future1
+				response2 = yield from future2
+				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet))
 	else:
 		logger.error('some error happen in orderbook monitor')
 
