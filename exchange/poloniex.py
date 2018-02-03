@@ -37,7 +37,7 @@ class poloniexUtil:
 			
 			return None
 	def getWallet(self):
-		res=self.handleRequest('returnCompleteBalances')
+		res=self.handleRequest('returnCompleteBalances',{})
 		if res is not None:
 			data={}
 			data['ETC']={'free':float(res['ETC']['available']),'locked':float(res['ETC']['onOrders'])}

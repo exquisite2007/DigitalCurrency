@@ -18,7 +18,9 @@ class okexUtil:
 			else:
 				param_str+='&'+key+'='+str(params[key])
 		m=hashlib.md5()
-		m.update((param_str+'&secret_key='+self.secret_key).encode('utf-8'))
+		param_str+='&secret_key='+self.secret_key
+		print(param_str)
+		m.update(param_str.encode('utf-8'))
 		sign=m.hexdigest().upper()
 		params['sign'] = sign
 		try:
@@ -29,14 +31,13 @@ class okexUtil:
 
 
 	def getWallet(self):
-		res=self.handleRequest('userinfo.do')
+		res=self.handleRequest('userinfo.do',{})
 		if res is not None and res['result'] is True:
 			data={}
 			data['ETC']={'free':float(res['info']['funds']['free']['etc']),'locked':float(res['info']['funds']['freezed']['etc'])}
 			data['USDT']={'free':float(res['info']['funds']['free']['usdt']),'locked':float(res['info']['funds']['freezed']['usdt'])}
 			return data
 		else:
-			
 			return None
 	def buy(self,pair,rate,amount):
 		params={'symbol':pair,'type':'buy','price':rate,'amount':amount}

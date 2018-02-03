@@ -174,11 +174,12 @@ async def makeDecision():
 
 async def refreshWallet():
 	while True:
-		await asyncio.sleep(60)
+		await asyncio.sleep(5)
 		await initWallet()
 async def handler():
 	await initWallet()
 	return await asyncio.wait([okex(),poloniex(),refreshWallet()],return_when=asyncio.FIRST_COMPLETED,)
+
 initAll()
 loop=asyncio.get_event_loop()
 loop.run_until_complete(handler())
