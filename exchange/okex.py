@@ -19,7 +19,6 @@ class okexUtil:
 				param_str+='&'+key+'='+str(params[key])
 		m=hashlib.md5()
 		param_str+='&secret_key='+self.secret_key
-		print(param_str)
 		m.update(param_str.encode('utf-8'))
 		sign=m.hexdigest().upper()
 		params['sign'] = sign

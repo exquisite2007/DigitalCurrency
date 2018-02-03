@@ -174,7 +174,7 @@ async def makeDecision():
 
 async def refreshWallet():
 	while True:
-		await asyncio.sleep(5)
+		await asyncio.sleep(60)
 		await initWallet()
 async def handler():
 	await initWallet()
