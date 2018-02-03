@@ -131,7 +131,7 @@ async def makeDecision():
 			min_wallet_volume=min(wallet['okex']['USDT']['free']/ok_ask_head,wallet['poloniex']['ETC']['free'])
 			min_volume=min(min_wallet_volume,min_maket_volume)
 			if min_volume< 0.00001:
-				logger.debug('no enough volume for trade in ok buy,give up')
+				logger.debug('[trade]no enough volume for trade in ok buy,give up')
 			else:
 				usd_volume=min_volume*ok_ask_head
 				wallet['okex']['USDT']['free']-=usd_volume
@@ -151,7 +151,7 @@ async def makeDecision():
 			min_wallet_volume=min(wallet['okex']['ETC']['free'],wallet['poloniex']['USDT']['free']/poloniex_ask_head)
 			min_volume=min(min_wallet_volume,min_maket_volume)
 			if min_volume< 0.00001:
-				logger.debug('no enough volume for trade in poloniex buy,give up')
+				logger.debug('[trade]no enough volume for trade in poloniex buy,give up')
 			else:
 				usd_volume=min_volume*poloniex_ask_head
 				wallet['poloniex']['USDT']['free']-=usd_volume
@@ -159,8 +159,8 @@ async def makeDecision():
 				wallet['okex']['ETC']['free']-=min_volume
 				wallet['okex']['ETC']['locked']+=min_volume
 				loop=asyncio.get_event_loop()
-				future1 = loop.run_in_executor(None, okexUtil.buy,'etc_usdt',ok_ask_head,min_volume)
-				future2 = loop.run_in_executor(None, poloniexUtil.sell,'USDT_ETC',poloniex_bid_head,min_volume)
+				future1 = loop.run_in_executor(None, okexUtil.sell,'etc_usdt',ok_bid_head,min_volume)
+				future2 = loop.run_in_executor(None, poloniexUtil.buy,'USDT_ETC',poloniex_ask_head,min_volume)
 				response1 = await future1
 				response2 = await future2
 				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet)))

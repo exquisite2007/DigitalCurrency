@@ -39,24 +39,13 @@ class okexUtil:
 			return None
 	def buy(self,pair,rate,amount):
 		params={'symbol':pair,'type':'buy','price':rate,'amount':amount}
-		res=self.handleRequest('trade.do')
-		if res is not None:
-			if 'result' in res and res['result']==True:
-				return res['order_id']
-			else:
-				return None
-		else:
-			return None
+		res=self.handleRequest('trade.do',params)
+		return res
 
 
 		
 	def sell(self,pair,rate,amount):
 		params={'symbol':pair,'type':'sell','price':rate,'amount':amount}
-		res=self.handleRequest('trade.do')
-		if res is not None:
-			if 'result' in res and res['result']==True:
-				return res['order_id']
-			else:
-				return None
-		else:
-			return None
+		res=self.handleRequest('trade.do',params)
+		
+		return res
