@@ -39,11 +39,11 @@ async def okex():
 					if type(res) is list and res[0]['channel'].startswith('ok'):
 						ask_map={}
 						for item in res[0]['data']['asks']:
-							ask_map[item[0]]=item[1]
+							ask_map[item[0]]=float(item[1])
 						okex_book['ask']=ask_map
 						bid_map={}
 						for item in res[0]['data']['bids']:
-							bid_map[item[0]]=item[1]
+							bid_map[item[0]]=float(item[1])
 						okex_book['bid']=bid_map
 					await makeDecision()
 			except  Exception as e:
@@ -68,11 +68,11 @@ async def poloniex():
 					book_size=0
 					ask_map={}
 					for key in sorted(item[1]['orderBook'][0],key=lambda subItem:float(subItem))[:BOOK_LIMIT]:
-						ask_map[key]=item[1]['orderBook'][0][key]
+						ask_map[key]=float(item[1]['orderBook'][0][key])
 					poloniex_book['ask']=ask_map
 					bid_map={}
 					for key  in sorted(item[1]['orderBook'][1],key=lambda subItem:float(subItem),reverse=True)[:BOOK_LIMIT]:
-						bid_map[key]=item[1]['orderBook'][1][key]
+						bid_map[key]=float(item[1]['orderBook'][1][key])
 					poloniex_book['bid']=bid_map
 				elif item[0] == 'o':
 					# ['o', 1, '26.54474428', '0.00000000']
@@ -80,12 +80,12 @@ async def poloniex():
 						if float(item[3])==0 and item[2] in  poloniex_book['ask']:
 							del poloniex_book['ask'][item[2]]
 						elif float(item[3])>0:
-							poloniex_book['ask'][item[2]]=item[3]
+							poloniex_book['ask'][item[2]]=float(item[3])
 					elif item[1] == 1:#bid
 						if float(item[3])==0 and item[2] in  poloniex_book['bid']:
 							del poloniex_book['bid'][item[2]]
 						elif float(item[3])>0:
-							poloniex_book['bid'][item[2]]=item[3]
+							poloniex_book['bid'][item[2]]=float(item[3])
 			await makeDecision()
 async def handler():
 	return await asyncio.wait([okex(),poloniex()],return_when=asyncio.FIRST_COMPLETED,)
@@ -105,11 +105,11 @@ def initWallet():
 	logger.info('Finish load wallet:{}'.format(str(wallet)))
 async def makeDecision():
 	if len(okex_book)>0 and len(poloniex_book)>0:
-		ok_ask_head=min(okex_book['ask'],key=lambda subItem:float(subItem))
-		ok_bid_head=max(okex_book['bid'],key=lambda subItem:float(subItem))
+		ok_ask_head=float(min(okex_book['ask'],key=lambda subItem:float(subItem)))
+		ok_bid_head=float(max(okex_book['bid'],key=lambda subItem:float(subItem)))
 		logger.debug("okex < ask {}:{} ,bid {}:{}".format(ok_ask_head,okex_book['ask'][ok_ask_head],ok_bid_head,okex_book['bid'][ok_bid_head]))
-		poloniex_ask_head=min(poloniex_book['ask'],key=lambda subItem:float(subItem))
-		poloniex_bid_head=max(poloniex_book['bid'],key=lambda subItem:float(subItem))
+		poloniex_ask_head=float(min(poloniex_book['ask'],key=lambda subItem:float(subItem)))
+		poloniex_bid_head=float(max(poloniex_book['bid'],key=lambda subItem:float(subItem)))
 		logger.debug("poloniex< ask {}:{} ,bid {}:{}".format(poloniex_ask_head,poloniex_book['ask'][poloniex_ask_head],poloniex_bid_head,poloniex_book['bid'][poloniex_bid_head]))
 		
 		ok_buy_profit=poloniex_bid_head-ok_ask_head-(poloniex_bid_head*0.0025+ok_ask_head*0.001)
