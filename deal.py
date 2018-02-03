@@ -100,7 +100,7 @@ def initAll():
 		sys.exit()
 async def initWallet():
 	loop=asyncio.get_event_loop()
-	wallet['okex']= loop.run_in_executor(None, okexUtil.getWallet)
+	wallet['okex']= await loop.run_in_executor(None, okexUtil.getWallet)
 	wallet['poloniex']=await loop.run_in_executor(None, poloniexUtil.getWallet)
 	logger.info('Finish load wallet:{}'.format(str(wallet)))
 async def makeDecision():
