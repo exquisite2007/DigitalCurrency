@@ -100,9 +100,14 @@ def initAll():
 		sys.exit()
 async def initWallet():
 	loop=asyncio.get_event_loop()
-	wallet['okex']= await loop.run_in_executor(None, okexUtil.getWallet)
-	wallet['poloniex']=await loop.run_in_executor(None, poloniexUtil.getWallet)
-	logger.info('Finish load wallet:{}'.format(str(wallet)))
+	ok_res = await loop.run_in_executor(None, okexUtil.getWallet)
+	poloniex_res=await loop.run_in_executor(None, poloniexUtil.getWallet)
+	if ok_res is not None and poloniex_res is not None:
+		wallet['okex']=ok_res
+		wallet['poloniex']=poloniex_res
+		logger.info('Finish load wallet:{}'.format(str(wallet)))
+	else:
+		logger.error('Error for update wallet{},{}'.format(ok_res,poloniex_res))
 async def makeDecision():
 	if len(okex_book)>0 and len(poloniex_book)>0:
 		ok_ask_head=min(okex_book['ask'],key=lambda subItem:float(subItem))
