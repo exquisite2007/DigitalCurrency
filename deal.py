@@ -105,17 +105,29 @@ def initWallet():
 	logger.info('Finish load wallet:{}'.format(str(wallet)))
 async def makeDecision():
 	if len(okex_book)>0 and len(poloniex_book)>0:
-		ok_ask_head=float(min(okex_book['ask'],key=lambda subItem:float(subItem)))
-		ok_bid_head=float(max(okex_book['bid'],key=lambda subItem:float(subItem)))
-		logger.debug("okex < ask {}:{} ,bid {}:{}".format(ok_ask_head,okex_book['ask'][ok_ask_head],ok_bid_head,okex_book['bid'][ok_bid_head]))
-		poloniex_ask_head=float(min(poloniex_book['ask'],key=lambda subItem:float(subItem)))
+		ok_ask_head=min(okex_book['ask'],key=lambda subItem:float(subItem))
+		ok_ask_head_volume=okex_book['ask'][ok_ask_head]
+		ok_ask_head=float(ok_ask_head)
+		
+		ok_bid_head=max(okex_book['bid'],key=lambda subItem:float(subItem))
+		ok_bid_head_volume=okex_book['bid'][ok_bid_head]
+		ok_bid_head=float(ok_bid_head)
+		logger.debug("okex < ask {}:{} ,bid {}:{}".format(ok_ask_head,ok_ask_head_volume,ok_bid_head,ok_bid_head_volume))
+		
+
+		poloniex_ask_head=min(poloniex_book['ask'],key=lambda subItem:float(subItem))
+		poloniex_ask_head_volume=poloniex_book['ask'][poloniex_ask_head]
+		poloniex_ask_head=float(poloniex_ask_head)
+
 		poloniex_bid_head=float(max(poloniex_book['bid'],key=lambda subItem:float(subItem)))
-		logger.debug("poloniex< ask {}:{} ,bid {}:{}".format(poloniex_ask_head,poloniex_book['ask'][poloniex_ask_head],poloniex_bid_head,poloniex_book['bid'][poloniex_bid_head]))
+		poloniex_bid_head_volume=poloniex_book['bid'][poloniex_bid_head]
+		poloniex_bid_head=float(poloniex_bid_head)
+		logger.debug("poloniex< ask {}:{} ,bid {}:{}".format(poloniex_ask_head,poloniex_ask_head_volume,poloniex_bid_head,poloniex_bid_head_volume))
 		
 		ok_buy_profit=poloniex_bid_head-ok_ask_head-(poloniex_bid_head*0.0025+ok_ask_head*0.001)
 		if ok_buy_profit>0.15:
 			logger.debug('over ok_buy threshold')
-			min_maket_volume=min(float(poloniex_book['bid'][poloniex_bid_head]),okex_book['ask'][ok_ask_head])
+			min_maket_volume=min(poloniex_bid_head_volume,ok_ask_head_volume)
 			min_wallet_volume=min(wallet['okex']['USDT']['free']/ok_ask_head,wallet['poloniex']['ETC']['free'])
 			min_volume=min(min_wallet_volume,min_maket_volume)
 			if min_volume< 0.00001:
@@ -129,14 +141,13 @@ async def makeDecision():
 				loop=asyncio.get_event_loop()
 				future1 = loop.run_in_executor(None, okexUtil.buy,'etc_usdt',ok_ask_head,min_volume)
 				future2 = loop.run_in_executor(None, poloniexUtil.sell,'USDT_ETC',poloniex_bid_head,min_volume)
-				print(type(future1))
 				response1 = await future1
 				response2 = await future2
 				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet)))
 
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.001)
 		if poloniex_buy_profit>-0.03:
-			min_maket_volume=min(float(poloniex_book['ask'][poloniex_ask_head]),okex_book['bid'][ok_bid_head])
+			min_maket_volume=min(poloniex_ask_head_volume,ok_bid_head_volume)
 			min_wallet_volume=min(wallet['okex']['ETC']['free'],wallet['poloniex']['USDT']['free']/poloniex_ask_head)
 			min_volume=min(min_wallet_volume,min_maket_volume)
 			if min_volume< 0.00001:
