@@ -23,11 +23,14 @@ poloniex_book={}
 okex_book={}
 okexUtil=okexUtil()
 poloniexUtil=poloniexUtil()
+loop=asyncio.get_event_loop()
 async def okex():
 	global okex_book
 	while True:
+		
 		async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
 			try:
+
 				param={'event':'addChannel','channel':'ok_sub_spot_etc_usdt_depth_5'}
 				await websocket.send(json.dumps(param))
 				while True:
@@ -42,12 +45,12 @@ async def okex():
 						for item in res[0]['data']['bids']:
 							bid_map[item[0]]=item[1]
 						okex_book['bid']=bid_map
-					makeDecision()
+					await makeDecision()
 			except  Exception as e:
 				okex_book={}
 				logger.error(e)
-			finally:
 				websocket.close()
+				
 
 async def poloniex():
 	async with websockets.connect('wss://api2.poloniex.com/') as websocket:
@@ -100,7 +103,8 @@ def initWallet():
 	wallet['okex']=okexUtil.getWallet()
 	wallet['poloniex']=poloniexUtil.getWallet()
 	logger.info('Finish load wallet:{}'.format(str(wallet)))
-def makeDecision():
+async def makeDecision():
+	print(str(okex_book)+str(poloniex_book))
 	if len(okex_book)>0 and len(poloniex_book)>0:
 		ok_ask_head=min(okex_book['ask'],key=lambda subItem:float(subItem))
 		ok_bid_head=max(okex_book['bid'],key=lambda subItem:float(subItem))
@@ -126,8 +130,9 @@ def makeDecision():
 				loop=asyncio.get_event_loop()
 				future1 = loop.run_in_executor(None, okexUtil.buy,'etc_usdt',ok_ask_head,min_volume)
 				future2 = loop.run_in_executor(None, poloniexUtil.sell,'USDT_ETC',poloniex_bid_head,min_volume)
-				response1 = yield from future1
-				response2 = yield from future2
+				print(type(future1))
+				response1 = await future1
+				response2 = await future2
 				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet)))
 
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.001)
@@ -146,8 +151,8 @@ def makeDecision():
 				loop=asyncio.get_event_loop()
 				future1 = loop.run_in_executor(None, okexUtil.buy,'etc_usdt',ok_ask_head,min_volume)
 				future2 = loop.run_in_executor(None, poloniexUtil.sell,'USDT_ETC',poloniex_bid_head,min_volume)
-				response1 = yield from future1
-				response2 = yield from future2
+				response1 = await future1
+				response2 = await future2
 				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet)))
 	else:
 		logger.error('some error happen in orderbook monitor')
