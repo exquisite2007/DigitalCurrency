@@ -86,7 +86,7 @@ async def poloniex():
 							del poloniex_book['bid'][item[2]]
 						elif float(item[3])>0:
 							poloniex_book['bid'][item[2]]=item[3]
-			makeDecision()
+			await makeDecision()
 async def handler():
 	return await asyncio.wait([okex(),poloniex()],return_when=asyncio.FIRST_COMPLETED,)
 def initAll():
