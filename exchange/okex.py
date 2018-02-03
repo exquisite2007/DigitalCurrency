@@ -9,32 +9,54 @@ class okexUtil:
 	access_key=None
 	secret_key=None
 
-	def generateOkParam(self,paramDict,secret_key):
-		res= None
-		for key in sorted(paramDict.keys()):
-			if res is  None:
-				res=key+'='+str(paramDict[key])
+	def handleRequest(self,command,params={}):
+		params['api_key']=self.access_key
+		param_str=None
+		for key in sorted(params.keys()):
+			if param_str is  None:
+				param_str=key+'='+str(params[key])
 			else:
-				res+='&'+key+'='+str(paramDict[key])
+				param_str+='&'+key+'='+str(params[key])
 		m=hashlib.md5()
-		m.update((res+'&secret_key='+secret_key).encode('utf-8'))
+		m.update((param_str+'&secret_key='+self.secret_key).encode('utf-8'))
 		sign=m.hexdigest().upper()
-		paramDict['sign'] = sign
-	def OkRequest(self,params):
+		params['sign'] = sign
 		try:
-			req_param={'api_key':self.access_key}
-			self.generateOkParam(req_param,self.secret_key)
-			url="https://www.okex.com/api/v1/userinfo.do"
-			return json.loads(requests.post(url,data=req_param).text)
+			url="https://www.okex.com/api/v1/"+command
+			return json.loads(requests.post(url,data=params).text)
 		except Exception as e:
-			print(e)
 			return None
+
+
 	def getWallet(self):
-		res=self.OkRequest(None)
+		res=self.handleRequest('userinfo.do')
 		if res is not None:
 			data={}
-			data['ETC']=float(res['info']['funds']['free']['etc'])
-			data['USDT']=float(res['info']['funds']['free']['usdt'])
+			data['ETC']={'free':float(res['info']['funds']['free']['etc']),'locked':float(res['info']['funds']['freezed']['etc'])}
+			data['USDT']={'free':float(res['info']['funds']['free']['usdt']),'locked':float(res['info']['funds']['freezed']['usdt'])}
 			return data
+		else:
+			return None
+	def buy(self,pair,rate,amount):
+		params={'symbol':pair,'type':'buy','price':rate,'amount':amount}
+		res=self.handleRequest('trade.do')
+		if res is not None:
+			if 'result' in res and res['result']==True:
+				return res['order_id']
+			else:
+				return None
+		else:
+			return None
+
+
+		
+	def sell(self,pair,rate,amount):
+		params={'symbol':pair,'type':'sell','price':rate,'amount':amount}
+		res=self.handleRequest('trade.do')
+		if res is not None:
+			if 'result' in res and res['result']==True:
+				return res['order_id']
+			else:
+				return None
 		else:
 			return None

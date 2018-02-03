@@ -18,13 +18,15 @@ class poloniexUtil:
 
 	
 		
-	def generatPoloniexParam(self,command):
+	def handleRequest(self,command,params={}):
 		try:
 
 			payload = {
 				'command': command,
 				'nonce': int(time() * 1000),
 			}
+			for key in params.keys():
+				payload[key]=params[key]
 			paybytes = urlencode(payload).encode('utf8')
 			sign = hmac.new(self.secret_key, paybytes, hashlib.sha512).hexdigest()
 			headers = {'Key': self.access_key,'Sign': sign,'Content-Type':'application/x-www-form-urlencoded'}
@@ -35,11 +37,26 @@ class poloniexUtil:
 			print(e)
 			return None
 	def getWallet(self):
-		res=self.generatPoloniexParam('returnBalances')
+		res=self.handleRequest('returnCompleteBalances')
 		if res is not None:
 			data={}
-			data['ETC']=float(res['ETC'])
-			data['USDT']=float(res['USDT'])
+			data['ETC']={'free':float(res['ETC']['available']),'locked':float(res['ETC']['onOrders'])}
+			data['USDT']={'free':float(res['USDT']['available']),'locked':float(res['USDT']['onOrders'])}
 			return data
+		else:
+			return None
+	def buy(self,pair,rate,amount):
+		params={'currencyPair':pair,'rate':rate,'amount':amount}
+
+		res=self.handleRequest('buy',params)
+		if res is not None:
+			return res
+		else:
+			return None
+	def sell(self,pair,rate,amount):
+		params={'currencyPair':pair,'rate':rate,'amount':amount}
+		res=self.handleRequest('sell',params)
+		if res is not None:
+			return res
 		else:
 			return None
