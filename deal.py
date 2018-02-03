@@ -24,6 +24,7 @@ okex_book={}
 okexUtil=okexUtil()
 poloniexUtil=poloniexUtil()
 async def okex():
+	global okex_book
 	while True:
 		try:
 			async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
@@ -44,7 +45,7 @@ async def okex():
 					makeDecision()
 		except  Exception as e:
 			okex_book={}
-			logger.error('Error happen in okex')
+			logger.error(e)
 
 async def poloniex():
 	async with websockets.connect('wss://api2.poloniex.com/') as websocket:
@@ -98,6 +99,7 @@ def initWallet():
 	wallet['poloniex']=poloniexUtil.getWallet()
 	logger.info('Finish load wallet:{}'.format(str(wallet)))
 def makeDecision():
+	print(str(poloniex_book))
 	if len(okex_book)>0 and len(poloniex_book)>0:
 		ok_ask_head=min(okex_book['ask'],key=lambda subItem:float(subItem))
 		ok_bid_head=max(okex_book['bid'],key=lambda subItem:float(subItem))
@@ -105,10 +107,12 @@ def makeDecision():
 		poloniex_ask_head=min(poloniex_book['ask'],key=lambda subItem:float(subItem))
 		poloniex_bid_head=max(poloniex_book['bid'],key=lambda subItem:float(subItem))
 		logger.debug("poloniex< ask {}:{} ,bid {}:{}".format(poloniex_ask_head,poloniex_book['ask'][poloniex_ask_head],poloniex_bid_head,poloniex_book['bid'][poloniex_bid_head]))
+	else:
+		logger.error('some error happen in orderbook monitor')
 
 
 
-initAll()
-initWallet()
+# initAll()
+# initWallet()
 loop=asyncio.get_event_loop()
 loop.run_until_complete(handler())
