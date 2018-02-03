@@ -128,7 +128,7 @@ def makeDecision():
 				future2 = loop.run_in_executor(None, poloniexUtil.sell,'USDT_ETC',poloniex_bid_head,min_volume)
 				response1 = yield from future1
 				response2 = yield from future2
-				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet))
+				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet)))
 
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.001)
 		if poloniex_buy_profit>-0.03:
@@ -148,7 +148,7 @@ def makeDecision():
 				future2 = loop.run_in_executor(None, poloniexUtil.sell,'USDT_ETC',poloniex_bid_head,min_volume)
 				response1 = yield from future1
 				response2 = yield from future2
-				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet))
+				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet)))
 	else:
 		logger.error('some error happen in orderbook monitor')
 
