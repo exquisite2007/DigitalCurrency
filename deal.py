@@ -104,7 +104,6 @@ def initWallet():
 	wallet['poloniex']=poloniexUtil.getWallet()
 	logger.info('Finish load wallet:{}'.format(str(wallet)))
 async def makeDecision():
-	print(str(okex_book)+str(poloniex_book))
 	if len(okex_book)>0 and len(poloniex_book)>0:
 		ok_ask_head=min(okex_book['ask'],key=lambda subItem:float(subItem))
 		ok_bid_head=max(okex_book['bid'],key=lambda subItem:float(subItem))
