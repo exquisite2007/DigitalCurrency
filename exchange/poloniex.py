@@ -34,7 +34,7 @@ class poloniexUtil:
 			r = requests.post(url, headers=headers, data=paybytes)
 			return json.loads(r.text)
 		except Exception as e:
-			print(e)
+			
 			return None
 	def getWallet(self):
 		res=self.handleRequest('returnCompleteBalances')

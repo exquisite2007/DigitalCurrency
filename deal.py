@@ -9,7 +9,9 @@ from  logging.handlers import TimedRotatingFileHandler
 logger = logging.getLogger("deal")
 logger.setLevel(logging.DEBUG)
 ch = TimedRotatingFileHandler('deal.log', when='D', interval=1, backupCount=5)
-ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 import os
 import sys
 from exchange.poloniex import poloniexUtil
@@ -82,11 +84,12 @@ async def poloniex():
 async def handler():
 	return await asyncio.wait([okex(),poloniex()],return_when=asyncio.FIRST_COMPLETED,)
 def initAll():
+	logger.debug('start init all')
 	if 'ok_access_key' in os.environ and 'poloniex_access_key' in os.environ:
 		okexUtil.access_key=os.environ['ok_access_key']
 		okexUtil.secret_key=os.environ['ok_secret_key']
-		poloniexUtil.access_key=os.environ['poloniex_access_key']
-		poloniexUtil.secret_key=os.environ['poloniex_secret_key']
+		poloniexUtil.access_key=os.environ['poloniex_access_key'].encode()
+		poloniexUtil.secret_key=os.environ['poloniex_secret_key'].encode()
 	else:
 		logger.error('please check you exchange access key exist in your environment')
 		sys.exit()
