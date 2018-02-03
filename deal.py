@@ -87,8 +87,7 @@ async def poloniex():
 						elif float(item[3])>0:
 							poloniex_book['bid'][item[2]]=float(item[3])
 			await makeDecision()
-async def handler():
-	return await asyncio.wait([okex(),poloniex()],return_when=asyncio.FIRST_COMPLETED,)
+
 def initAll():
 	logger.debug('start init all')
 	if 'ok_access_key' in os.environ and 'poloniex_access_key' in os.environ:
@@ -99,9 +98,10 @@ def initAll():
 	else:
 		logger.error('please check you exchange access key exist in your environment')
 		sys.exit()
-def initWallet():
-	wallet['okex']=okexUtil.getWallet()
-	wallet['poloniex']=poloniexUtil.getWallet()
+async def initWallet():
+	loop=asyncio.get_event_loop()
+	wallet['okex']= loop.run_in_executor(None, okexUtil.getWallet)
+	wallet['poloniex']=await loop.run_in_executor(None, poloniexUtil.getWallet)
 	logger.info('Finish load wallet:{}'.format(str(wallet)))
 async def makeDecision():
 	if len(okex_book)>0 and len(poloniex_book)>0:
@@ -143,7 +143,7 @@ async def makeDecision():
 				future2 = loop.run_in_executor(None, poloniexUtil.sell,'USDT_ETC',poloniex_bid_head,min_volume)
 				response1 = await future1
 				response2 = await future2
-				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet)))
+				logger.info('[trade]Finish okex buy:{},{}. profit:{}'.format(str(response1),str(response2),ok_buy_profit))
 
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.001)
 		if poloniex_buy_profit>-0.03:
@@ -163,13 +163,17 @@ async def makeDecision():
 				future2 = loop.run_in_executor(None, poloniexUtil.buy,'USDT_ETC',poloniex_ask_head,min_volume)
 				response1 = await future1
 				response2 = await future2
-				logger.info('[trade]Finish trade:{},{}. Wallet status:{}'.format(str(response1),str(response2),str(wallet)))
+				logger.info('[trade]Finish poloniex buy:{},{}. profit:{}'.format(str(response1),str(response2)),poloniex_buy_profit)
 	else:
 		logger.error('some error happen in orderbook monitor')
 
-
-
+async def refreshWallet():
+	while True:
+		await asyncio.sleep(60)
+		await initWallet()
+async def handler():
+	await initWallet()
+	return await asyncio.wait([okex(),poloniex(),refreshWallet()],return_when=asyncio.FIRST_COMPLETED,)
 initAll()
-initWallet()
 loop=asyncio.get_event_loop()
 loop.run_until_complete(handler())
