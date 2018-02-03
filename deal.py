@@ -26,8 +26,8 @@ poloniexUtil=poloniexUtil()
 async def okex():
 	global okex_book
 	while True:
-		try:
-			async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
+		async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
+			try:
 				param={'event':'addChannel','channel':'ok_sub_spot_etc_usdt_depth_5'}
 				await websocket.send(json.dumps(param))
 				while True:
@@ -43,9 +43,11 @@ async def okex():
 							bid_map[item[0]]=item[1]
 						okex_book['bid']=bid_map
 					makeDecision()
-		except  Exception as e:
-			okex_book={}
-			logger.error(e)
+			except  Exception as e:
+				okex_book={}
+				logger.error(e)
+			finally:
+				websocket.close()
 
 async def poloniex():
 	async with websockets.connect('wss://api2.poloniex.com/') as websocket:
@@ -99,7 +101,6 @@ def initWallet():
 	wallet['poloniex']=poloniexUtil.getWallet()
 	logger.info('Finish load wallet:{}'.format(str(wallet)))
 def makeDecision():
-	print(str(poloniex_book))
 	if len(okex_book)>0 and len(poloniex_book)>0:
 		ok_ask_head=min(okex_book['ask'],key=lambda subItem:float(subItem))
 		ok_bid_head=max(okex_book['bid'],key=lambda subItem:float(subItem))
