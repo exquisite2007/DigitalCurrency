@@ -30,12 +30,13 @@ class okexUtil:
 
 	def getWallet(self):
 		res=self.handleRequest('userinfo.do')
-		if res is not None:
+		if res is not None and res['result'] is True:
 			data={}
 			data['ETC']={'free':float(res['info']['funds']['free']['etc']),'locked':float(res['info']['funds']['freezed']['etc'])}
 			data['USDT']={'free':float(res['info']['funds']['free']['usdt']),'locked':float(res['info']['funds']['freezed']['usdt'])}
 			return data
 		else:
+			
 			return None
 	def buy(self,pair,rate,amount):
 		params={'symbol':pair,'type':'buy','price':rate,'amount':amount}
