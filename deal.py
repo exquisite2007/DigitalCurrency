@@ -168,7 +168,7 @@ async def makeDecision():
 				future2 = loop.run_in_executor(None, poloniexUtil.buy,'USDT_ETC',poloniex_ask_head,min_volume)
 				response1 = await future1
 				response2 = await future2
-				logger.info('[trade]Finish poloniex buy:{},{}. profit:{}'.format(str(response1),str(response2)),poloniex_buy_profit)
+				logger.info('[trade]Finish poloniex buy:{},{}. profit:{}'.format(str(response1),str(response2),poloniex_buy_profit))
 	else:
 		logger.error('some error happen in orderbook monitor')
 
