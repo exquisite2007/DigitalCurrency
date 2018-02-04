@@ -135,7 +135,7 @@ async def makeDecision():
 			min_maket_volume=min(poloniex_bid_head_volume,ok_ask_head_volume)
 			min_wallet_volume=min(wallet['okex']['USDT']['free']/ok_ask_head,wallet['poloniex']['ETC']['free'])
 			min_volume=min(min_wallet_volume,min_maket_volume)
-			if min_volume< 0.00001:
+			if min_volume< 0.01:
 				logger.debug('[trade]no enough volume for trade in ok buy,give up')
 			else:
 				usd_volume=min_volume*ok_ask_head
@@ -155,7 +155,7 @@ async def makeDecision():
 			min_maket_volume=min(poloniex_ask_head_volume,ok_bid_head_volume)
 			min_wallet_volume=min(wallet['okex']['ETC']['free'],wallet['poloniex']['USDT']['free']/poloniex_ask_head)
 			min_volume=min(min_wallet_volume,min_maket_volume)
-			if min_volume< 0.00001:
+			if min_volume< 0.01:
 				logger.debug('[trade]no enough volume for trade in poloniex buy,give up')
 			else:
 				usd_volume=min_volume*poloniex_ask_head
