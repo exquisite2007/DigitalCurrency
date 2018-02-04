@@ -117,7 +117,7 @@ async def makeDecision():
 		ok_bid_head=max(okex_book['bid'],key=lambda subItem:float(subItem))
 		ok_bid_head_volume=okex_book['bid'][ok_bid_head]
 		ok_bid_head=float(ok_bid_head)
-		logger.debug("okex < ask {}:{} ,bid {}:{}".format(ok_ask_head,ok_ask_head_volume,ok_bid_head,ok_bid_head_volume))
+		logger.debug("okex < bid {}:{} ,ask {}:{}".format(ok_bid_head,ok_bid_head_volume,ok_ask_head,ok_ask_head_volume))
 		
 
 		poloniex_ask_head=min(poloniex_book['ask'],key=lambda subItem:float(subItem))
@@ -169,6 +169,8 @@ async def makeDecision():
 				response1 = await future1
 				response2 = await future2
 				logger.info('[trade]Finish poloniex buy:{},{}. profit:{}'.format(str(response1),str(response2),poloniex_buy_profit))
+		logger.debug('ok_buy_profit:{},poloniex buy profit:{}'.format(ok_buy_profit,poloniex_buy_profit))
+
 	else:
 		logger.error('some error happen in orderbook monitor')
 
