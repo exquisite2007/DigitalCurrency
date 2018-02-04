@@ -10,6 +10,8 @@ try:
 except ImportError:
     #python3
     from urllib.parse import urlencode
+import logging
+logger = logging.getLogger("deal")
 class poloniexUtil:
 	def __init__(self):
 		pass
@@ -34,10 +36,11 @@ class poloniexUtil:
 			r = requests.post(url, headers=headers, data=paybytes)
 			return json.loads(r.text)
 		except Exception as e:
-			
+			logger.error('[poloniex] error happen in request:{}'.format(e))
 			return None
 	def getWallet(self):
 		res=self.handleRequest('returnCompleteBalances',{})
+		logger.debug('[poloniex]requst wallet result:{}'.format(res))
 		if res is not None:
 			data={}
 			data['ETC']={'free':float(res['ETC']['available']),'locked':float(res['ETC']['onOrders'])}
@@ -49,6 +52,7 @@ class poloniexUtil:
 		params={'currencyPair':pair,'rate':rate,'amount':amount}
 
 		res=self.handleRequest('buy',params)
+		logger.debug('[poloniex] buy requst{}|{}|{}.get result:{}'.format(pair,rate,amount,res))
 		if res is not None:
 			return res
 		else:
@@ -56,6 +60,7 @@ class poloniexUtil:
 	def sell(self,pair,rate,amount):
 		params={'currencyPair':pair,'rate':rate,'amount':amount}
 		res=self.handleRequest('sell',params)
+		logger.debug('[poloniex] sell requst{}|{}|{}.get result:{}'.format(pair,rate,amount,res))
 		if res is not None:
 			return res
 		else:
