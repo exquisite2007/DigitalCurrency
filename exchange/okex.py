@@ -2,6 +2,8 @@
 import requests
 import json
 import hashlib
+import logging
+logger = logging.getLogger("deal")
 
 class okexUtil:
 	def __init__(self):
@@ -26,11 +28,14 @@ class okexUtil:
 			url="https://www.okex.com/api/v1/"+command
 			return json.loads(requests.post(url,data=params).text)
 		except Exception as e:
+			logger.error('[OKEX] request error happen:{}'.format(e))
 			return None
 
 
 	def getWallet(self):
 		res=self.handleRequest('userinfo.do',{})
+		logger.debug('[OKEX]requst wallet result:{}'.format(res))
+
 		if res is not None and res['result'] is True:
 			data={}
 			data['ETC']={'free':float(res['info']['funds']['free']['etc']),'locked':float(res['info']['funds']['freezed']['etc'])}
@@ -41,6 +46,7 @@ class okexUtil:
 	def buy(self,pair,rate,amount):
 		params={'symbol':pair,'type':'buy','price':rate,'amount':amount}
 		res=self.handleRequest('trade.do',params)
+		logger.debug('[OKEX] buy requst{}|{}|{}.get result:{}'.format(pair,rate,amount,res))
 		return res
 
 
@@ -48,5 +54,5 @@ class okexUtil:
 	def sell(self,pair,rate,amount):
 		params={'symbol':pair,'type':'sell','price':rate,'amount':amount}
 		res=self.handleRequest('trade.do',params)
-		
+		logger.debug('[OKEX] sell requst {}|{}|{}get result:{}'.format(pair,rate,amount,res))
 		return res
