@@ -2,6 +2,9 @@
 import requests
 import json
 import hashlib
+import sys
+import os
+from optparse import OptionParser
 import logging
 logger = logging.getLogger("deal")
 
@@ -56,3 +59,32 @@ class okexUtil:
 		res=self.handleRequest('trade.do',params)
 		logger.debug('[OKEX] sell requst {}|{}|{}get result:{}'.format(pair,rate,amount,res))
 		return res
+def main(argv=None):
+	parser = OptionParser()
+	parser.add_option("-m", "--mode", dest="mode", help="0-wallet,1-buy,2-sell")
+	parser.add_option("-r", "--rate", dest="rate", help="rate")
+	parser.add_option("-a", "--amount", dest="amount", help="amount")
+	parser.set_defaults(mode=0)
+	util=okexUtil()
+	
+	if 'ok_access_key' not in os.environ or 'poloniex_access_key' not in os.environ:
+		return
+	util.access_key=os.environ['ok_access_key']
+	util.secret_key=os.environ['ok_secret_key']
+	(opts, args) = parser.parse_args(argv)
+	print(opts)
+	if int(opts.mode)==0:
+		print(util.getWallet())
+	elif int(opts.mode)==1:
+		if opts.amount is None or opts.rate is None:
+			return
+		print(util.buy('etc_usdt',float(opts.rate),float(opts.amount)))
+	elif int(opts.mode)==2:
+		if opts.amount is None or opts.rate is None:
+			return
+		print(util.sell('etc_usdt',float(opts.rate),float(opts.amount)))
+
+
+
+if __name__ == "__main__":
+	sys.exit(main())

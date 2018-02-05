@@ -130,7 +130,7 @@ async def makeDecision():
 		logger.debug("poloniex< ask {}:{} ,bid {}:{}".format(poloniex_ask_head,poloniex_ask_head_volume,poloniex_bid_head,poloniex_bid_head_volume))
 		
 		ok_buy_profit=poloniex_bid_head-ok_ask_head-(poloniex_bid_head*0.0025+ok_ask_head*0.001)
-		if ok_buy_profit>-0.05:
+		if ok_buy_profit>0.12:
 			logger.debug('over ok_buy threshold')
 			min_maket_volume=min(poloniex_bid_head_volume,ok_ask_head_volume)
 			min_wallet_volume=min(wallet['okex']['USDT']['free']/ok_ask_head,wallet['poloniex']['ETC']['free'])
@@ -151,7 +151,7 @@ async def makeDecision():
 				logger.info('[trade]Finish okex buy:{},{}. profit:{}'.format(str(response1),str(response2),ok_buy_profit))
 
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.001)
-		if poloniex_buy_profit>0.25:
+		if poloniex_buy_profit>-0.05:
 			min_maket_volume=min(poloniex_ask_head_volume,ok_bid_head_volume)
 			min_wallet_volume=min(wallet['okex']['ETC']['free'],wallet['poloniex']['USDT']['free']/poloniex_ask_head)
 			min_volume=min(min_wallet_volume,min_maket_volume)
@@ -169,7 +169,7 @@ async def makeDecision():
 				response1 = await future1
 				response2 = await future2
 				logger.info('[trade]Finish poloniex buy:{},{}. profit:{}'.format(str(response1),str(response2),poloniex_buy_profit))
-		logger.debug('ok_buy_profit:{},poloniex buy profit:{}'.format(ok_buy_profit,poloniex_buy_profit))
+		logger.debug('buy_profit|{}|{}'.format(ok_buy_profit,poloniex_buy_profit))
 
 	else:
 		logger.error('some error happen in orderbook monitor')
