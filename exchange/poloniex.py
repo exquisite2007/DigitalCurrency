@@ -70,11 +70,12 @@ class poloniexUtil:
 			return res
 		else:
 			return None
-	def unfinish_order(self,pair):
+	async def unfinish_order(self,pair):
 		params={'currencyPair':self.CURRENT_PAIR}
-		res=self.handleRequest('returnOpenOrders',params)
+		loop=asyncio.get_event_loop()
+		res = await loop.run_in_executor(None, self.handleRequest,'returnOpenOrders',params)
 		if res is not None:
-			return json.loads(res)
+			return res
 		else:
 			return None
 	async def move_order(self,orderId,rate):

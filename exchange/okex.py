@@ -135,19 +135,20 @@ class okexUtil:
 			return 0
 	async def unfinish_order_handler(self):
 		res = await self.unfinish_order()
+		logger.debug('REMOVE{}'.format(res))
 		if res is not None and len(res)>0:
 			for item in res:
-				order_res=self.get_orderbook_head()
+				head_res=self.get_orderbook_head()
 
-				if order_res is not None and item['type']=='sell' and order_res[2]-item['price']*1.001>0:
+				if head_res is not None and item['type']=='sell' and head_res[2]-item['price']*1.001>0:
 					cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
 					if cancel_res is not None and cancel_res['result']==True:
-						await self.sell(order_res[2],item['amount'])
+						await self.sell(head_res[2],item['amount'])
 
-				if order_res is not None and item['type']=='buy' and item['price']*0.-order_res[0]*1.001>0:
+				if head_res is not None and item['type']=='buy' and item['price']*0.-head_res[0]*1.001>0:
 					cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
 					if cancel_res is not None and cancel_res['result']==True:
-						await self.buy(order_res[0],item['amount'])
+						await self.buy(head_res[0],item['amount'])
 
 
 		logger.info("TODO: handle okex unfinisehd order")
