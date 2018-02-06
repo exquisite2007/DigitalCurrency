@@ -102,14 +102,12 @@ class okexUtil:
 	async def order_book(self,trade_handler):
 		channel='ok_sub_spot_'+self.PAIR_MAP[self.CURRENT_PAIR]+'_depth_5'
 		while True:
-			print('ok book_order')
 			async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
 				try:	
 					param={'event':'addChannel','channel':channel}
 					await websocket.send(json.dumps(param))
 					while True:
 						message = await websocket.recv()
-						print(message)
 						res=json.loads(message)
 						if type(res) is list and res[0]['channel'].startswith('ok'):
 							ask_map={}

@@ -61,7 +61,7 @@ async def trade_handler():
 		logger.debug('buy_profit|{}|{}'.format(ok_buy_profit,poloniex_buy_profit))
 
 	else:
-		logger.error('some error happen in orderbook monitor')
+		logger.error('some error happen in orderbook monitor:{},{}'.format(ok_head,poloniex_head))
 
 async def refreshWallet():
 	while True:
@@ -73,7 +73,7 @@ async def handle_unfinish_order():
 		await asyncio.wait([poloniexUtil.unfinish_order_handler(),okexUtil.unfinish_order_handler()],return_when=asyncio.FIRST_COMPLETED,)
 async def handler():
 	# return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),refreshWallet(),handle_unfinish_order()],return_when=asyncio.FIRST_COMPLETED,)
-	return await asyncio.wait([okexUtil.order_book(trade_handler)],return_when=asyncio.FIRST_COMPLETED,)
+	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler)],return_when=asyncio.FIRST_COMPLETED,)
 
 initAll()
 loop=asyncio.get_event_loop()
