@@ -106,38 +106,44 @@ class poloniexUtil:
 			logger.error('Error for update poloniex wallet:{}'.format(res))
 
 	async def order_book(self,trade_handler):
-		async with websockets.connect('wss://api2.poloniex.com/') as websocket:
-			param={'command':'subscribe','channel':self.CURRENT_PAIR}	
-			await websocket.send(json.dumps(param))	
-			while True:
-				message = await websocket.recv()
-				res=json.loads(message)
-				if len(res)<2:
-					continue
-				for item in res[2]:
-					if item[0] == 'i':
-						book_size=0
-						ask_map={}
-						for key in sorted(item[1]['orderBook'][0],key=lambda subItem:float(subItem))[:BOOK_LIMIT]:
-							ask_map[key]=float(item[1]['orderBook'][0][key])
-						self.ORDER_BOOK['ask']=ask_map
-						bid_map={}
-						for key  in sorted(item[1]['orderBook'][1],key=lambda subItem:float(subItem),reverse=True)[:BOOK_LIMIT]:
-							bid_map[key]=float(item[1]['orderBook'][1][key])
-						self.ORDER_BOOK['bid']=bid_map
-					elif item[0] == 'o':
-						# ['o', 1, '26.54474428', '0.00000000']
-						if item[1] == 0:#ask
-							if float(item[3])==0 and item[2] in  self.ORDER_BOOK['ask']:
-								del self.ORDER_BOOK['ask'][item[2]]
-							elif float(item[3])>0:
-								self.ORDER_BOOK['ask'][item[2]]=float(item[3])
-						elif item[1] == 1:#bid
-							if float(item[3])==0 and item[2] in  self.ORDER_BOOK['bid']:
-								del self.ORDER_BOOK['bid'][item[2]]
-							elif float(item[3])>0:
-								self.ORDER_BOOK['bid'][item[2]]=float(item[3])
-				await trade_handler()
+		while True:
+			async with websockets.connect('wss://api2.poloniex.com/') as websocket:
+				try:
+					param={'command':'subscribe','channel':self.CURRENT_PAIR}
+					await websocket.send(json.dumps(param))	
+					while True:
+						message = await websocket.recv()
+						res=json.loads(message)
+						if len(res)<2:
+							continue
+						for item in res[2]:
+							if item[0] == 'i':
+								book_size=0
+								ask_map={}
+								for key in sorted(item[1]['orderBook'][0],key=lambda subItem:float(subItem))[:BOOK_LIMIT]:
+									ask_map[key]=float(item[1]['orderBook'][0][key])
+								self.ORDER_BOOK['ask']=ask_map
+								bid_map={}
+								for key  in sorted(item[1]['orderBook'][1],key=lambda subItem:float(subItem),reverse=True)[:BOOK_LIMIT]:
+									bid_map[key]=float(item[1]['orderBook'][1][key])
+								self.ORDER_BOOK['bid']=bid_map
+							elif item[0] == 'o':
+								# ['o', 1, '26.54474428', '0.00000000']
+								if item[1] == 0:#ask
+									if float(item[3])==0 and item[2] in  self.ORDER_BOOK['ask']:
+										del self.ORDER_BOOK['ask'][item[2]]
+									elif float(item[3])>0:
+										self.ORDER_BOOK['ask'][item[2]]=float(item[3])
+								elif item[1] == 1:#bid
+									if float(item[3])==0 and item[2] in  self.ORDER_BOOK['bid']:
+										del self.ORDER_BOOK['bid'][item[2]]
+									elif float(item[3])>0:
+										self.ORDER_BOOK['bid'][item[2]]=float(item[3])
+						await trade_handler()
+				except Exception as e:
+					self.ORDER_BOOK={}
+					logger.error(e)
+					websocket.close()
 	def get_orderbook_head(self):
 		if len(self.ORDER_BOOK)>0:
 			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
