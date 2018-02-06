@@ -6,13 +6,22 @@ import sys
 import os
 from optparse import OptionParser
 import logging
+import asyncio
+import websockets
+
 logger = logging.getLogger("deal")
 
 class okexUtil:
-	def __init__(self):
-		pass
+	def __init__(self,pair):
+		self.CURRENT_PAIR=pair
+		self.CURRENCY=pair.split('_')
+		self.WALLET={}
+		self.ORDER_BOOK={}
 	access_key=None
 	secret_key=None
+
+
+	PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt'}
 
 	def handleRequest(self,command,params={}):
 		params['api_key']=self.access_key
@@ -36,29 +45,125 @@ class okexUtil:
 
 
 	def getWallet(self):
+		print('ok here')
 		res=self.handleRequest('userinfo.do',{})
 		logger.debug('[OKEX]requst wallet result:{}'.format(res))
 
 		if res is not None and res['result'] is True:
 			data={}
-			data['ETC']={'free':float(res['info']['funds']['free']['etc']),'locked':float(res['info']['funds']['freezed']['etc'])}
-			data['USDT']={'free':float(res['info']['funds']['free']['usdt']),'locked':float(res['info']['funds']['freezed']['usdt'])}
+			data[self.CURRENCY[0]]={'free':float(res['info']['funds']['free'][self.CURRENCY.lower()]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY.lower()])}
+			data[self.CURRENCY[1]]={'free':float(res['info']['funds']['free'][self.CURRENCY[1]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[1]])}
 			return data
 		else:
 			return None
-	def buy(self,pair,rate,amount):
-		params={'symbol':pair,'type':'buy','price':rate,'amount':amount}
-		res=self.handleRequest('trade.do',params)
-		logger.debug('[OKEX] buy requst{}|{}|{}.get result:{}'.format(pair,rate,amount,res))
+	async def buy(self,rate,amount):
+		
+		self.WALLET[self.CURRENCY[1]]['free']-=amount*rate
+		self.WALLET[self.CURRENCY[1]]['locked']+=amount*rate
+		params={'symbol':self.PAIR_MAP[self.CURRENT_PAIR],'type':'buy','price':rate,'amount':amount}
+		loop=asyncio.get_event_loop()
+		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
+		logger.debug('[OKEX] buy requst{}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		return res
 
 
 		
-	def sell(self,pair,rate,amount):
-		params={'symbol':pair,'type':'sell','price':rate,'amount':amount}
-		res=self.handleRequest('trade.do',params)
-		logger.debug('[OKEX] sell requst {}|{}|{}get result:{}'.format(pair,rate,amount,res))
+	async def sell(self,rate,amount):
+		self.WALLET[self.CURRENCY[0]]['free']-=amount
+		self.WALLET[self.CURRENCY[0]]['locked']+=amount
+		params={'symbol':self.PAIR_MAP[self.CURRENT_PAIR],'type':'sell','price':rate,'amount':amount}
+		loop=asyncio.get_event_loop()
+		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
+		logger.debug('[OKEX] sell requst {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		return res
+	async def unfinish_order(self):
+		loop=asyncio.get_event_loop()
+		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{})
+		logger.debug('[OKEX] unfinished order get result:{}'.format(res))
+		return res
+	async def cancel_order(self,orderId,pair):
+		loop=asyncio.get_event_loop()
+		params={'order_id':orderId,'symbol':pair}
+		res = await loop.run_in_executor(None, self.handleRequest,'cancel_order.do',params)
+		if res is not None:
+			return res
+		else:
+			return None
+
+	async def init_wallet(self):
+		loop=asyncio.get_event_loop()
+		ok_res = await loop.run_in_executor(None, self.getWallet)
+		if ok_res is not None:
+			self.WALLET=ok_res
+			logger.info('Finish load OKEX wallet:{}'.format(self.WALLET))
+		else:
+			logger.error('Error for update OKEX wallet:{}'.format(ok_res))
+
+	async def order_book(self,trade_handler):
+		channel='ok_sub_spot_'+self.PAIR_MAP[self.CURRENT_PAIR]+'_depth_5'
+		while True:
+			print('ok book_order')
+			async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
+				try:	
+					param={'event':'addChannel','channel':channel}
+					await websocket.send(json.dumps(param))
+					while True:
+						message = await websocket.recv()
+						print(message)
+						res=json.loads(message)
+						if type(res) is list and res[0]['channel'].startswith('ok'):
+							ask_map={}
+							for item in res[0]['data']['asks']:
+								ask_map[item[0]]=float(item[1])
+							self.ORDER_BOOK['ask']=ask_map
+							bid_map={}
+							for item in res[0]['data']['bids']:
+								bid_map[item[0]]=float(item[1])
+							self.ORDER_BOOK['bid']=bid_map
+						await trade_handler()
+				except  Exception as e:
+					self.ORDER_BOOK={}
+					logger.error(e)
+					websocket.close()
+	def get_orderbook_head(self):
+		if len(self.ORDER_BOOK)>0:
+			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
+			ok_ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
+			ask_head=float(ask_head)
+			bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
+			bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
+			bid_head=float(bid_head)
+			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
+		else:
+			return None
+	def get_sell_avaliable_amount():
+		if len(self.WALLET)>0:
+			self.WALLET[self.CURRENCY[0]]['free']
+		else:
+			return 0
+	def get_buy_avaliable_amount(rate):
+		if len(self.WALLET)>0:
+			self.WALLET[self.CURRENCY[1]]['free']/rate
+		else:
+			return 0
+	async def unfinish_order_handler(self):
+		res = await self.unfinish_order()
+		if res is not None and len(res)>0:
+			for item in res:
+				order_res=self.get_orderbook_head()
+
+				if order_res is not None and item['type']=='sell' and order_res[2]-item['price']*1.001>0:
+					cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
+					if cancel_res is not None and cancel_res['result']==True:
+						await self.sell(order_res[2],item['amount'])
+
+				if order_res is not None and item['type']=='buy' and item['price']*0.-order_res[0]*1.001>0:
+					cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
+					if cancel_res is not None and cancel_res['result']==True:
+						await self.buy(order_res[0],item['amount'])
+
+
+		logger.info("TODO: handle okex unfinisehd order")
 def main(argv=None):
 	parser = OptionParser()
 	parser.add_option("-m", "--mode", dest="mode", help="0-wallet,1-buy,2-sell")
@@ -75,14 +180,16 @@ def main(argv=None):
 	print(opts)
 	if int(opts.mode)==0:
 		print(util.getWallet())
-	elif int(opts.mode)==1:
-		if opts.amount is None or opts.rate is None:
-			return
-		print(util.buy('etc_usdt',float(opts.rate),float(opts.amount)))
-	elif int(opts.mode)==2:
-		if opts.amount is None or opts.rate is None:
-			return
-		print(util.sell('etc_usdt',float(opts.rate),float(opts.amount)))
+	# elif int(opts.mode)==1:
+	# 	if opts.amount is None or opts.rate is None:
+	# 		return
+	# 	print(util.buy('etc_usdt',float(opts.rate),float(opts.amount)))
+	# elif int(opts.mode)==2:
+	# 	if opts.amount is None or opts.rate is None:
+	# 		return
+	# 	print(util.sell('etc_usdt',float(opts.rate),float(opts.amount)))
+	# elif int(opts.mode)==3:
+	# 	print(util.unfinish_order())
 
 
 

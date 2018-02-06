@@ -3,6 +3,8 @@ import requests
 import json
 import hashlib
 import hmac
+import asyncio
+import websockets
 from time import time
 try:
     #python2
@@ -13,10 +15,15 @@ except ImportError:
 import logging
 logger = logging.getLogger("deal")
 class poloniexUtil:
-	def __init__(self):
-		pass
+	def __init__(self,pair):
+		self.CURRENT_PAIR=pair
+		self.CURRENCY=pair.split('_')
+		self.WALLET={}
+		self.ORDER_BOOK={}
 	access_key=None
 	secret_key=None
+
+	PAIR_MAP={'BTC_ETH':'BTC_ETH','BTC_LTC':'BTC_LTC','BTC_USDT':'USDT_BTC','ETC_USDT':'USDT_ETC'}
 
 	
 		
@@ -43,25 +50,129 @@ class poloniexUtil:
 		logger.debug('[poloniex]requst wallet result:{}'.format(res))
 		if res is not None:
 			data={}
-			data['ETC']={'free':float(res['ETC']['available']),'locked':float(res['ETC']['onOrders'])}
-			data['USDT']={'free':float(res['USDT']['available']),'locked':float(res['USDT']['onOrders'])}
+			data[self.CURRENCY[0]]={'free':float(res[self.CURRENCY[0]]['available']),'locked':float(res[self.CURRENCY[0]]['onOrders'])}
+			data[self.CURRENCY[1]]={'free':float(res[self.CURRENCY[1]]['available']),'locked':float(res[self.CURRENCY[1]]['onOrders'])}
 			return data
 		else:
-			return None
-	def buy(self,pair,rate,amount):
-		params={'currencyPair':pair,'rate':rate,'amount':amount}
-
-		res=self.handleRequest('buy',params)
+			return {}
+	async def buy(self,pair,rate,amount):
+		self.WALLET[self.CURRENCY[1]]['free']-=amount*rate
+		self.WALLET[self.CURRENCY[1]]['locked']+=amount*rate
+		params={'currencyPair':self.PAIR_MAP[pair],'rate':rate,'amount':amount}
+		loop=asyncio.get_event_loop()
+		res = await loop.run_in_executor(None, self.handleRequest,'buy',params)
 		logger.debug('[poloniex] buy requst{}|{}|{}.get result:{}'.format(pair,rate,amount,res))
 		if res is not None:
 			return res
 		else:
 			return None
-	def sell(self,pair,rate,amount):
-		params={'currencyPair':pair,'rate':rate,'amount':amount}
-		res=self.handleRequest('sell',params)
+	async def sell(self,pair,rate,amount):
+		self.WALLET[self.CURRENCY[0]]['free']-=amount
+		self.WALLET[self.CURRENCY[0]]['locked']+=amount
+		params={'currencyPair':self.PAIR_MAP[pair],'rate':rate,'amount':amount}
+		loop=asyncio.get_event_loop()
+		res = await loop.run_in_executor(None, self.handleRequest,'sell',params)
 		logger.debug('[poloniex] sell requst{}|{}|{}.get result:{}'.format(pair,rate,amount,res))
 		if res is not None:
 			return res
 		else:
 			return None
+	def unfinish_order(self,pair):
+		params={'currencyPair':self.PAIR_MAP[pair]}
+		res=self.handleRequest('returnOpenOrders',params)
+		if res is not None:
+			return json.loads(res)
+		else:
+			return None
+	async def move_order(self,orderId,rate):
+		params={'orderNumber':orderId}
+		loop=asyncio.get_event_loop()
+		res = await loop.run_in_executor(None, self.handleRequest,'moveOrder',params)
+		if res is not None:
+			return res
+		else:
+			return None
+	def cancel_order(self,orderId):
+		params={'orderNumber':orderId}
+		res=self.handleRequest('cancelOrder',params)
+		if res is not None:
+			return res
+		else:
+			return None
+
+	async def init_wallet(self):
+		loop=asyncio.get_event_loop()
+		res = await loop.run_in_executor(None, self.getWallet)
+		if res is not None:
+			self.WALLET=res
+			logger.info('Finish load poloniex wallet:{}'.format(self.WALLET))
+		else:
+			logger.error('Error for update poloniex wallet:{}'.format(res))
+
+	async def order_book(self,trade_handler):
+		async with websockets.connect('wss://api2.poloniex.com/') as websocket:
+			param={'command':'subscribe','channel':self.CURRENT_PAIR}	
+			await websocket.send(json.dumps(param))	
+			while True:
+				message = await websocket.recv()
+				res=json.loads(message)
+				if len(res)<2:
+					continue
+				for item in res[2]:
+					if item[0] == 'i':
+						book_size=0
+						ask_map={}
+						for key in sorted(item[1]['orderBook'][0],key=lambda subItem:float(subItem))[:BOOK_LIMIT]:
+							ask_map[key]=float(item[1]['orderBook'][0][key])
+						self.ORDER_BOOK['ask']=ask_map
+						bid_map={}
+						for key  in sorted(item[1]['orderBook'][1],key=lambda subItem:float(subItem),reverse=True)[:BOOK_LIMIT]:
+							bid_map[key]=float(item[1]['orderBook'][1][key])
+						self.ORDER_BOOK['bid']=bid_map
+					elif item[0] == 'o':
+						# ['o', 1, '26.54474428', '0.00000000']
+						if item[1] == 0:#ask
+							if float(item[3])==0 and item[2] in  self.ORDER_BOOK['ask']:
+								del self.ORDER_BOOK['ask'][item[2]]
+							elif float(item[3])>0:
+								self.ORDER_BOOK['ask'][item[2]]=float(item[3])
+						elif item[1] == 1:#bid
+							if float(item[3])==0 and item[2] in  self.ORDER_BOOK['bid']:
+								del self.ORDER_BOOK['bid'][item[2]]
+							elif float(item[3])>0:
+								self.ORDER_BOOK['bid'][item[2]]=float(item[3])
+				await trade_handler()
+	def get_orderbook_head(self):
+		if len(self.ORDER_BOOK)>0:
+			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
+			ok_ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
+			ask_head=float(ask_head)
+			bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
+			bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
+			bid_head=float(bid_head)
+			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
+		else:
+			return None
+	def get_sell_avaliable_amount():
+		if len(self.WALLET)>0:
+			self.WALLET[self.CURRENCY[0]]['free']
+		else:
+			return 0
+	def get_buy_avaliable_amount(rate):
+		if len(self.WALLET)>0:
+			self.WALLET[self.CURRENCY[1]]['free']/rate
+		else:
+			return 0
+	async def unfinish_order_handler(self):
+		res = await self.unfinish_order(PAIR_MAP[self.CURRENT_PAIR])
+		head=self.get_orderbook_head()
+		if res is not None and head is not None:
+			lst=[]
+			for item in res:
+				if item['type']=='sell' and float(item['rate'])<head[2]:
+					lst.append(self.move_order(item['orderNumber'],head[2]))
+				if item['type']=='buy' and float(item['rate'])>head[0]:
+					lst.append(self.move_order(item['orderNumber'],head[0]))
+			logger.info("Poloniex move order:{}".format(res))
+			await asyncio.wait(lst,return_when=asyncio.FIRST_COMPLETED,)
+
