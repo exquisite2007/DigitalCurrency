@@ -128,12 +128,12 @@ class okexUtil:
 			return None
 	def get_sell_avaliable_amount(self):
 		if len(self.WALLET)>0:
-			self.WALLET[self.CURRENCY[0]]['free']
+			return self.WALLET[self.CURRENCY[0]]['free']
 		else:
 			return 0
 	def get_buy_avaliable_amount(self,rate):
 		if len(self.WALLET)>0:
-			self.WALLET[self.CURRENCY[1]]['free']/rate
+			return self.WALLET[self.CURRENCY[1]]['free']/rate
 		else:
 			return 0
 	async def unfinish_order_handler(self):
