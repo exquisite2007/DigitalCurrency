@@ -67,12 +67,15 @@ class okexUtil:
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{})
 		logger.debug('[OKEX] unfinished order get result:{}'.format(res))
-		return res
+		if res is not None and res['result']==True:
+			return res['orders']
+		else:
+			return None
 	async def cancel_order(self,orderId,pair):
 		loop=asyncio.get_event_loop()
 		params={'order_id':orderId,'symbol':pair}
 		res = await loop.run_in_executor(None, self.handleRequest,'cancel_order.do',params)
-		if res is not None:
+		if res is not None and res['result']==True:
 			return res
 		else:
 			return None
@@ -81,7 +84,7 @@ class okexUtil:
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'userinfo.do',{})
 		self.WALLET={}
-		if res is not None:
+		if res is not None and res['result']==True:
 			self.WALLET[self.CURRENCY[0]]={'free':float(res['info']['funds']['free'][self.CURRENCY[0]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[0]])}
 			self.WALLET[self.CURRENCY[1]]={'free':float(res['info']['funds']['free'][self.CURRENCY[1]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[1]])}
 			logger.info('Finish load poloniex wallet:{}'.format(self.WALLET))
@@ -138,7 +141,6 @@ class okexUtil:
 		if res is not None and len(res)>0:
 			for item in res:
 				head_res=self.get_orderbook_head()
-				logger.debug('HERE{}'.format(item))
 				if head_res is not None and item['type']=='sell' and head_res[2]-item['price']*1.001>0:
 					cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
 					if cancel_res is not None and cancel_res['result']==True:

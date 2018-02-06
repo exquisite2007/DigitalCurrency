@@ -170,5 +170,6 @@ class poloniexUtil:
 				if item['type']=='buy' and float(item['rate'])>head[0]:
 					lst.append(self.move_order(item['orderNumber'],head[0]))
 			logger.info("Poloniex move order:{}".format(res))
-			await asyncio.wait(lst,return_when=asyncio.FIRST_COMPLETED,)
+			if len(lst)>0:
+				await asyncio.wait(lst,return_when=asyncio.FIRST_COMPLETED,)
 
