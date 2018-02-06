@@ -128,7 +128,7 @@ class okexUtil:
 	def get_orderbook_head(self):
 		if len(self.ORDER_BOOK)>0:
 			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
-			ok_ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
+			ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
 			ask_head=float(ask_head)
 			bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
 			bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
