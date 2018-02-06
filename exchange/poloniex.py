@@ -14,7 +14,7 @@ except ImportError:
     from urllib.parse import urlencode
 import logging
 logger = logging.getLogger("deal")
-
+BOOK_LIMIT=10
 class poloniexUtil:
 	def __init__(self,pair):
 		self.PAIR_MAP={'BTC_ETH':'BTC_ETH','BTC_LTC':'BTC_LTC','BTC_USDT':'USDT_BTC','ETC_USDT':'USDT_ETC'}
