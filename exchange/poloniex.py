@@ -148,12 +148,12 @@ class poloniexUtil:
 			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
 		else:
 			return None
-	def get_sell_avaliable_amount():
+	def get_sell_avaliable_amount(self):
 		if len(self.WALLET)>0:
 			self.WALLET[self.CURRENCY[0]]['free']
 		else:
 			return 0
-	def get_buy_avaliable_amount(rate):
+	def get_buy_avaliable_amount(self,rate):
 		if len(self.WALLET)>0:
 			self.WALLET[self.CURRENCY[1]]['free']/rate
 		else:
