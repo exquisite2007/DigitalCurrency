@@ -15,7 +15,7 @@ class okexUtil:
 	def __init__(self,pair):
 		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt'}
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
-		self.CURRENCY=pair.split('_')
+		self.CURRENCY=self.CURRENT_PAIR.split('_')
 		self.WALLET={}
 		self.ORDER_BOOK={}
 	access_key=None
@@ -135,11 +135,10 @@ class okexUtil:
 			return 0
 	async def unfinish_order_handler(self):
 		res = await self.unfinish_order()
-		logger.debug('REMOVE{}'.format(res))
 		if res is not None and len(res)>0:
 			for item in res:
 				head_res=self.get_orderbook_head()
-
+				logger.debug('HERE{}'.format(item))
 				if head_res is not None and item['type']=='sell' and head_res[2]-item['price']*1.001>0:
 					cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
 					if cancel_res is not None and cancel_res['result']==True:
