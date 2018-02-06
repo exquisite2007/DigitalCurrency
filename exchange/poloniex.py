@@ -14,16 +14,18 @@ except ImportError:
     from urllib.parse import urlencode
 import logging
 logger = logging.getLogger("deal")
+
 class poloniexUtil:
 	def __init__(self,pair):
-		self.CURRENT_PAIR=pair
+		self.PAIR_MAP={'BTC_ETH':'BTC_ETH','BTC_LTC':'BTC_LTC','BTC_USDT':'USDT_BTC','ETC_USDT':'USDT_ETC'}
+		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=pair.split('_')
 		self.WALLET={}
 		self.ORDER_BOOK={}
 	access_key=None
 	secret_key=None
 
-	PAIR_MAP={'BTC_ETH':'BTC_ETH','BTC_LTC':'BTC_LTC','BTC_USDT':'USDT_BTC','ETC_USDT':'USDT_ETC'}
+	
 
 	
 		
@@ -45,20 +47,11 @@ class poloniexUtil:
 		except Exception as e:
 			logger.error('[poloniex] error happen in request:{}'.format(e))
 			return None
-	def getWallet(self):
-		res=self.handleRequest('returnCompleteBalances',{})
-		logger.debug('[poloniex]requst wallet result:{}'.format(res))
-		if res is not None:
-			data={}
-			data[self.CURRENCY[0]]={'free':float(res[self.CURRENCY[0]]['available']),'locked':float(res[self.CURRENCY[0]]['onOrders'])}
-			data[self.CURRENCY[1]]={'free':float(res[self.CURRENCY[1]]['available']),'locked':float(res[self.CURRENCY[1]]['onOrders'])}
-			return data
-		else:
-			return {}
-	async def buy(self,pair,rate,amount):
+		
+	async def buy(self,rate,amount):
 		self.WALLET[self.CURRENCY[1]]['free']-=amount*rate
 		self.WALLET[self.CURRENCY[1]]['locked']+=amount*rate
-		params={'currencyPair':self.PAIR_MAP[pair],'rate':rate,'amount':amount}
+		params={'currencyPair':self.CURRENT_PAIR,'rate':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'buy',params)
 		logger.debug('[poloniex] buy requst{}|{}|{}.get result:{}'.format(pair,rate,amount,res))
@@ -66,10 +59,10 @@ class poloniexUtil:
 			return res
 		else:
 			return None
-	async def sell(self,pair,rate,amount):
+	async def sell(self,rate,amount):
 		self.WALLET[self.CURRENCY[0]]['free']-=amount
 		self.WALLET[self.CURRENCY[0]]['locked']+=amount
-		params={'currencyPair':self.PAIR_MAP[pair],'rate':rate,'amount':amount}
+		params={'currencyPair':self.CURRENT_PAIR,'rate':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'sell',params)
 		logger.debug('[poloniex] sell requst{}|{}|{}.get result:{}'.format(pair,rate,amount,res))
@@ -78,7 +71,7 @@ class poloniexUtil:
 		else:
 			return None
 	def unfinish_order(self,pair):
-		params={'currencyPair':self.PAIR_MAP[pair]}
+		params={'currencyPair':self.CURRENT_PAIR}
 		res=self.handleRequest('returnOpenOrders',params)
 		if res is not None:
 			return json.loads(res)
@@ -102,9 +95,11 @@ class poloniexUtil:
 
 	async def init_wallet(self):
 		loop=asyncio.get_event_loop()
-		res = await loop.run_in_executor(None, self.getWallet)
+		res = await loop.run_in_executor(None, self.handleRequest,'returnCompleteBalances',{})
+		self.WALLET={}
 		if res is not None:
-			self.WALLET=res
+			self.WALLET[self.CURRENCY[0]]={'free':float(res[self.CURRENCY[0]]['available']),'locked':float(res[self.CURRENCY[0]]['onOrders'])}
+			self.WALLET[self.CURRENCY[1]]={'free':float(res[self.CURRENCY[1]]['available']),'locked':float(res[self.CURRENCY[1]]['onOrders'])}
 			logger.info('Finish load poloniex wallet:{}'.format(self.WALLET))
 		else:
 			logger.error('Error for update poloniex wallet:{}'.format(res))
@@ -164,7 +159,7 @@ class poloniexUtil:
 		else:
 			return 0
 	async def unfinish_order_handler(self):
-		res = await self.unfinish_order(PAIR_MAP[self.CURRENT_PAIR])
+		res = await self.unfinish_order(self.CURRENT_PAIR)
 		head=self.get_orderbook_head()
 		if res is not None and head is not None:
 			lst=[]

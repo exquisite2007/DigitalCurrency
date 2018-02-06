@@ -13,7 +13,8 @@ logger = logging.getLogger("deal")
 
 class okexUtil:
 	def __init__(self,pair):
-		self.CURRENT_PAIR=pair
+		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt'}
+		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=pair.split('_')
 		self.WALLET={}
 		self.ORDER_BOOK={}
@@ -21,7 +22,6 @@ class okexUtil:
 	secret_key=None
 
 
-	PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt'}
 
 	def handleRequest(self,command,params={}):
 		params['api_key']=self.access_key
@@ -44,23 +44,10 @@ class okexUtil:
 			return None
 
 
-	def getWallet(self):
-		print('ok here')
-		res=self.handleRequest('userinfo.do',{})
-		logger.debug('[OKEX]requst wallet result:{}'.format(res))
-
-		if res is not None and res['result'] is True:
-			data={}
-			data[self.CURRENCY[0]]={'free':float(res['info']['funds']['free'][self.CURRENCY.lower()]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY.lower()])}
-			data[self.CURRENCY[1]]={'free':float(res['info']['funds']['free'][self.CURRENCY[1]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[1]])}
-			return data
-		else:
-			return None
-	async def buy(self,rate,amount):
-		
+	async def buy(self,rate,amount):		
 		self.WALLET[self.CURRENCY[1]]['free']-=amount*rate
 		self.WALLET[self.CURRENCY[1]]['locked']+=amount*rate
-		params={'symbol':self.PAIR_MAP[self.CURRENT_PAIR],'type':'buy','price':rate,'amount':amount}
+		params={'symbol':self.CURRENT_PAIR,'type':'buy','price':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
 		logger.debug('[OKEX] buy requst{}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
@@ -71,7 +58,7 @@ class okexUtil:
 	async def sell(self,rate,amount):
 		self.WALLET[self.CURRENCY[0]]['free']-=amount
 		self.WALLET[self.CURRENCY[0]]['locked']+=amount
-		params={'symbol':self.PAIR_MAP[self.CURRENT_PAIR],'type':'sell','price':rate,'amount':amount}
+		params={'symbol':self.CURRENT_PAIR,'type':'sell','price':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
 		logger.debug('[OKEX] sell requst {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
@@ -92,15 +79,17 @@ class okexUtil:
 
 	async def init_wallet(self):
 		loop=asyncio.get_event_loop()
-		ok_res = await loop.run_in_executor(None, self.getWallet)
-		if ok_res is not None:
-			self.WALLET=ok_res
-			logger.info('Finish load OKEX wallet:{}'.format(self.WALLET))
+		res = await loop.run_in_executor(None, self.handleRequest,'userinfo.do',{})
+		self.WALLET={}
+		if res is not None:
+			self.WALLET[self.CURRENCY[0]]={'free':float(res['info']['funds']['free'][self.CURRENCY[0]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[0]])}
+			self.WALLET[self.CURRENCY[1]]={'free':float(res['info']['funds']['free'][self.CURRENCY[1]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[1]])}
+			logger.info('Finish load poloniex wallet:{}'.format(self.WALLET))
 		else:
-			logger.error('Error for update OKEX wallet:{}'.format(ok_res))
+			logger.error('Error for update poloniex wallet:{}'.format(res))
 
 	async def order_book(self,trade_handler):
-		channel='ok_sub_spot_'+self.PAIR_MAP[self.CURRENT_PAIR]+'_depth_5'
+		channel='ok_sub_spot_'+self.CURRENT_PAIR+'_depth_5'
 		while True:
 			async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
 				try:	
@@ -175,19 +164,6 @@ def main(argv=None):
 	util.access_key=os.environ['ok_access_key']
 	util.secret_key=os.environ['ok_secret_key']
 	(opts, args) = parser.parse_args(argv)
-	print(opts)
-	if int(opts.mode)==0:
-		print(util.getWallet())
-	# elif int(opts.mode)==1:
-	# 	if opts.amount is None or opts.rate is None:
-	# 		return
-	# 	print(util.buy('etc_usdt',float(opts.rate),float(opts.amount)))
-	# elif int(opts.mode)==2:
-	# 	if opts.amount is None or opts.rate is None:
-	# 		return
-	# 	print(util.sell('etc_usdt',float(opts.rate),float(opts.amount)))
-	# elif int(opts.mode)==3:
-	# 	print(util.unfinish_order())
 
 
 
