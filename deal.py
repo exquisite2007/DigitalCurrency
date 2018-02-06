@@ -58,7 +58,7 @@ async def trade_handler():
 				response1 = await okexUtil.sell(ok_bid_head,min_volume)
 				response2 = await poloniexUtil.buy(poloniex_ask_head,min_volume)
 				logger.info('[trade]Finish poloniex buy:{},{}. profit:{}'.format(str(response1),str(response2),poloniex_buy_profit))
-		logger.debug('buy_profit|{}|{}'.format(ok_buy_profit,poloniex_buy_profit))
+		logger.debug('buy_profit:{}|{}|{}|{}'.format(ok_head,poloniex_head,ok_buy_profit,poloniex_buy_profit))
 
 	else:
 		logger.error('some error happen in orderbook monitor:{},{}'.format(ok_head,poloniex_head))
