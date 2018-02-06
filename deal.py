@@ -72,8 +72,7 @@ async def handle_unfinish_order():
 		await asyncio.sleep(60)
 		await asyncio.wait([poloniexUtil.unfinish_order_handler(),okexUtil.unfinish_order_handler()],return_when=asyncio.FIRST_COMPLETED,)
 async def handler():
-	# return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),refreshWallet(),handle_unfinish_order()],return_when=asyncio.FIRST_COMPLETED,)
-	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler)],return_when=asyncio.FIRST_COMPLETED,)
+	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),refreshWallet(),handle_unfinish_order()],return_when=asyncio.FIRST_COMPLETED,)
 
 initAll()
 loop=asyncio.get_event_loop()
