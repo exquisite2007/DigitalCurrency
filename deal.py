@@ -19,7 +19,8 @@ from exchange.okex import okexUtil
 SUPPOR_PAIR='ETC_USDT'
 okexUtil=okexUtil(SUPPOR_PAIR)
 poloniexUtil=poloniexUtil(SUPPOR_PAIR)
-loop=asyncio.get_event_loop()
+lock = asyncio.Lock()
+
 
 def initAll():
 	logger.debug('start init all')
@@ -31,7 +32,7 @@ def initAll():
 	else:
 		logger.error('please check you exchange access key exist in your environment')
 		sys.exit()
-async def trade_handler():
+async def trade_handler_process():
 	ok_head=okexUtil.get_orderbook_head()
 	poloniex_head=poloniexUtil.get_orderbook_head()
 	if ok_head is not None and poloniex_head is not None:
@@ -63,6 +64,13 @@ async def trade_handler():
 
 	else:
 		logger.error('some error happen in orderbook monitor:{},{}'.format(ok_head,poloniex_head))
+async def trade_handler():	
+	await lock
+    try:
+        await trade_handler_process()
+    finally:
+        lock.release()
+
 
 async def refreshWallet():
 	while True:

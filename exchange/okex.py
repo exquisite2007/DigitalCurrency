@@ -50,7 +50,7 @@ class okexUtil:
 		params={'symbol':self.CURRENT_PAIR,'type':'buy','price':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
-		logger.debug('[OKEX] buy requst{}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
+		logger.debug('[OKEX] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		return res
 
 
@@ -61,7 +61,7 @@ class okexUtil:
 		params={'symbol':self.CURRENT_PAIR,'type':'sell','price':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
-		logger.debug('[OKEX] sell requst {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
+		logger.debug('[OKEX] sell request {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		return res
 	async def unfinish_order(self):
 		loop=asyncio.get_event_loop()
@@ -87,7 +87,7 @@ class okexUtil:
 		if res is not None and res['result']==True:
 			self.WALLET[self.CURRENCY[0]]={'free':float(res['info']['funds']['free'][self.CURRENCY[0]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[0]])}
 			self.WALLET[self.CURRENCY[1]]={'free':float(res['info']['funds']['free'][self.CURRENCY[1]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[1]])}
-			logger.info('Finish load poloniex wallet:{}'.format(self.WALLET))
+			logger.info('Finish load okex wallet:{}'.format(self.WALLET))
 		else:
 			logger.error('Error for update poloniex wallet:{}'.format(res))
 
