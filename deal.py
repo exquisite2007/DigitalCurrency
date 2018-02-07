@@ -66,10 +66,10 @@ async def trade_handler_process():
 		logger.error('some error happen in orderbook monitor:{},{}'.format(ok_head,poloniex_head))
 async def trade_handler():	
 	await lock
-    try:
-        await trade_handler_process()
-    finally:
-        lock.release()
+	try:
+		await trade_handler_process()
+	finally:
+	lock.release()
 
 
 async def refreshWallet():
