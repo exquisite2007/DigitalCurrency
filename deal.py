@@ -41,7 +41,6 @@ async def trade_handler():
 		
 		ok_buy_profit=poloniex_bid_head-ok_ask_head-(poloniex_bid_head*0.0025+ok_ask_head*0.002)
 		if ok_buy_profit>0.12:
-			logger.debug('HAHA:{}'.format([poloniex_bid_head_volume,ok_ask_head_volume,okexUtil.get_buy_avaliable_amount(ok_ask_head),poloniexUtil.get_sell_avaliable_amount()]))
 			min_volume=min([poloniex_bid_head_volume,ok_ask_head_volume,okexUtil.get_buy_avaliable_amount(ok_ask_head),poloniexUtil.get_sell_avaliable_amount()])
 			
 			if min_volume< 0.01 and min_volume*poloniex_bid_head<1:
@@ -53,7 +52,6 @@ async def trade_handler():
 
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.002)
 		if poloniex_buy_profit>-0.01:
-			logger.debug('HERE:{}'.format([poloniex_ask_head_volume,ok_bid_head_volume,okexUtil.get_sell_avaliable_amount(),poloniexUtil.get_buy_avaliable_amount(poloniex_ask_head)]))
 			min_volume=min([poloniex_ask_head_volume,ok_bid_head_volume,okexUtil.get_sell_avaliable_amount(),poloniexUtil.get_buy_avaliable_amount(poloniex_ask_head)])
 			if min_volume< 0.01 and min_volume*poloniex_ask_head<1:
 				logger.debug('[trade]no enough volume for trade in poloniex buy,give up')
