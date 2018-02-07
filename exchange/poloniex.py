@@ -65,7 +65,7 @@ class poloniexUtil:
 		params={'currencyPair':self.CURRENT_PAIR,'rate':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'sell',params)
-		logger.debug('[poloniex] sell request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
+		logger.info('[poloniex] sell request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		if res is not None:
 			return res
 		else:
@@ -75,6 +75,7 @@ class poloniexUtil:
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'returnOpenOrders',params)
 		if res is not None:
+			logger.debug('[poloniex] unfinish_order :{}.get result:{}'.format(pair,res))
 			return res
 		else:
 			return None
@@ -83,6 +84,7 @@ class poloniexUtil:
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'moveOrder',params)
 		if res is not None:
+			logger.debug('[poloniex] move order:{}|{}.get result:{}'.format(orderId,rate,res))
 			return res
 		else:
 			return None
@@ -116,6 +118,7 @@ class poloniexUtil:
 						res=json.loads(message)
 						if len(res)<2:
 							continue
+						logger.debug('poloniex:{}'.format(res))
 						for item in res[2]:
 							if item[0] == 'i':
 								book_size=0
@@ -139,6 +142,7 @@ class poloniexUtil:
 										del self.ORDER_BOOK['bid'][item[2]]
 									elif float(item[3])>0:
 										self.ORDER_BOOK['bid'][item[2]]=float(item[3])
+
 						await trade_handler()
 				except Exception as e:
 					self.ORDER_BOOK={}
