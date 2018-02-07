@@ -69,7 +69,7 @@ async def trade_handler():
 	try:
 		await trade_handler_process()
 	finally:
-	lock.release()
+		lock.release()
 
 
 async def refreshWallet():
