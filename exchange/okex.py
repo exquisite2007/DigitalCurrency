@@ -152,7 +152,6 @@ class okexUtil:
 						await self.buy(head_res[0],item['amount'])
 
 
-		logger.info("TODO: handle okex unfinisehd order")
 def main(argv=None):
 	parser = OptionParser()
 	parser.add_option("-m", "--mode", dest="mode", help="0-wallet,1-buy,2-sell")

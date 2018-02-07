@@ -36,7 +36,7 @@ x={'ok':0,'poloniex':0,'profit':0,'direction':0,'ok_c':0,'polo_c':0}
 
 def exchange(serial_item):
     #ok buy
-    ok_buy_profit=serial_item[1]-serial_item[2]-(serial_item[1]*0.001+serial_item[2]*0.0025) 
+    ok_buy_profit=serial_item[1]-serial_item[2]-(serial_item[1]*0.002+serial_item[2]*0.0025) 
     # if ok_buy_profit >0.24809:
     if ok_buy_profit >0.12:
         x['ok_c']+=1
@@ -46,7 +46,7 @@ def exchange(serial_item):
             x['direction']=1
             print('buy:'+str(ok_buy_profit))
         return
-    ok_sell_profit=serial_item[3]-serial_item[0]-(serial_item[3]*0.001+serial_item[0]*0.0025)
+    ok_sell_profit=serial_item[3]-serial_item[0]-(serial_item[3]*0.002+serial_item[0]*0.0025)
     if ok_sell_profit > -0.01:
         x['polo_c']+=1
         if  x['direction']==1 :

@@ -54,7 +54,7 @@ class poloniexUtil:
 		params={'currencyPair':self.CURRENT_PAIR,'rate':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'buy',params)
-		logger.debug('[poloniex] buy request {}|{}|{}.get result:{}'.format(pair,rate,amount,res))
+		logger.debug('[poloniex] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		if res is not None:
 			return res
 		else:
@@ -65,7 +65,7 @@ class poloniexUtil:
 		params={'currencyPair':self.CURRENT_PAIR,'rate':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'sell',params)
-		logger.debug('[poloniex] sell request {}|{}|{}.get result:{}'.format(pair,rate,amount,res))
+		logger.debug('[poloniex] sell request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		if res is not None:
 			return res
 		else:
