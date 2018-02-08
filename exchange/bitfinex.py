@@ -39,6 +39,8 @@ class bitfinexUtil:
 							continue
 						data=res[1]
 						if len(data) >3:
+							self.ORDER_BOOK['ask']={}
+							self.ORDER_BOOK['bid']={}
 							for item in data[1][25:25+BOOK_LIMIT]:#snapshot
 								self.ORDER_BOOK['ask'][item[0]]=-item[1]
 							for item in data[1][:BOOK_LIMIT]:#snapshot
