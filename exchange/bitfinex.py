@@ -30,7 +30,7 @@ class bitfinexUtil:
 		while True:
 			async with websockets.connect('wss://api.bitfinex.com/ws/2') as websocket:
 				try:
-					param={'event':'subscribe','channel':'book','symbol':self.CURRENT_PAIR,'prec':'P0','freq':'F0','len': '15'}
+					param={'event':'subscribe','channel':'book','symbol':self.CURRENT_PAIR,'prec':'P0','freq':'F0','len': '25'}
 					await websocket.send(json.dumps(param))	
 					while True:
 						message = await websocket.recv()
@@ -60,6 +60,7 @@ class bitfinexUtil:
 					logger.error('ERROR happen in bitfinex connection:{}'.format(e))
 					websocket.close()
 	def get_orderbook_head(self):
+		print('here{}'.format(self.ORDER_BOOK))
 		if len(self.ORDER_BOOK)>0:
 			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
 			ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
