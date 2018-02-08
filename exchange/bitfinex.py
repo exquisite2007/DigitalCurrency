@@ -54,7 +54,7 @@ class bitfinexUtil:
 								else:
 									self.ORDER_BOOK['ask'][item[0]]=-item[2]
 							
-						await trade_handler(self)
+						await trade_handler()
 				except Exception as e:
 					self.ORDER_BOOK={}
 					logger.error('ERROR happen in bitfinex connection:{}'.format(e))
@@ -71,8 +71,9 @@ class bitfinexUtil:
 			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
 		else:
 			return None
+util = bitfinexUtil('ETC_USDT')
 async def test(self):
-	print('nothing here:{}'.format(self.get_orderbook_head()))
+	print('nothing here:{}'.format(util.get_orderbook_head()))
 def main(argv=None):
 	parser = OptionParser()
 	parser.add_option("-m", "--mode", dest="mode", help="0-wallet,1-buy,2-sell")
@@ -80,7 +81,7 @@ def main(argv=None):
 	parser.add_option("-a", "--amount", dest="amount", help="amount")
 	parser.add_option("-p", "--pair", dest="pair", help="pair")
 	parser.set_defaults(mode=0,pair='ETC_USDT')
-	util = bitfinexUtil('ETC_USDT')
+	
 
 	
 	# if 'bitfinex_access_key' not in os.environ:
