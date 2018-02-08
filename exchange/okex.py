@@ -160,7 +160,7 @@ def main(argv=None):
 	parser.set_defaults(mode=0)
 	util=okexUtil()
 	
-	if 'ok_access_key' not in os.environ or 'poloniex_access_key' not in os.environ:
+	if 'ok_access_key' not in os.environ:
 		return
 	util.access_key=os.environ['ok_access_key']
 	util.secret_key=os.environ['ok_secret_key']

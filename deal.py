@@ -17,6 +17,7 @@ import sys
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
 SUPPOR_PAIR='ETC_USDT'
+MAX_TRADE_SIZE=3
 okexUtil=okexUtil(SUPPOR_PAIR)
 poloniexUtil=poloniexUtil(SUPPOR_PAIR)
 lock = asyncio.Lock()
@@ -42,7 +43,7 @@ async def trade_handler_process():
 		
 		ok_buy_profit=poloniex_bid_head-ok_ask_head-(poloniex_bid_head*0.0025+ok_ask_head*0.002)
 		if ok_buy_profit>0.12:
-			min_volume=min([poloniex_bid_head_volume,ok_ask_head_volume,okexUtil.get_buy_avaliable_amount(ok_ask_head),poloniexUtil.get_sell_avaliable_amount()])
+			min_volume=min([poloniex_bid_head_volume,ok_ask_head_volume,okexUtil.get_buy_avaliable_amount(ok_ask_head),poloniexUtil.get_sell_avaliable_amount(),MAX_TRADE_SIZE])
 			
 			if min_volume< 0.01 and min_volume*poloniex_bid_head<1:
 				logger.debug('[trade]no enough volume for trade in ok buy,give up')
@@ -53,7 +54,7 @@ async def trade_handler_process():
 
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.002)
 		if poloniex_buy_profit>-0.02:
-			min_volume=min([poloniex_ask_head_volume,ok_bid_head_volume,okexUtil.get_sell_avaliable_amount(),poloniexUtil.get_buy_avaliable_amount(poloniex_ask_head)])
+			min_volume=min([poloniex_ask_head_volume,ok_bid_head_volume,okexUtil.get_sell_avaliable_amount(),poloniexUtil.get_buy_avaliable_amount(poloniex_ask_head),MAX_TRADE_SIZE])
 			if min_volume< 0.01 and min_volume*poloniex_ask_head<1:
 				logger.debug('[trade]no enough volume for trade in poloniex buy,give up')
 			else:

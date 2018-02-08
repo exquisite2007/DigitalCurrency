@@ -80,17 +80,18 @@ def parse(date,mode):
         res_df = pd.concat([okex_df,poloniex_df],axis=1)
         res_df.apply(exchange,axis=1)
         print(x)
-    else:
+    elif mode==2:
 
-        profit_ok_sell=okex_df['bid1']-poloniex_df['ask1']-(okex_df['bid1']*0.001+poloniex_df['ask1']*0.0015)
+        profit_ok_sell=2*(okex_df['bid1']-poloniex_df['ask1']-(okex_df['bid1']*0.002+poloniex_df['ask1']*0.0025))/(okex_df['bid1']+poloniex_df['ask1'])
         # first=okex_df['bid1']-poloniex_df['ask1']
         profit_ok_sell.name='ok sell and poloniex buy'
-        profit_ok_buy=poloniex_df['bid1']-okex_df['ask1']-(okex_df['ask1']*0.001+poloniex_df['bid1']*0.0015)
+        profit_ok_buy=2*(poloniex_df['bid1']-okex_df['ask1']-(okex_df['ask1']*0.002+poloniex_df['bid1']*0.0025))/(poloniex_df['bid1']+okex_df['ask1'])
         # second=poloniex_df['bid1']-okex_df['ask1']
         profit_ok_buy.name='poloniex sell and ok buy'
         res_df=pd.concat([profit_ok_sell,profit_ok_buy],axis=1)
-        res_df.plot()
-
+        # res_df.plot()
+        # plt.figure();
+        res_df.plot.hist(bins=20,alpha=0.5)
         # cost_ok_sell=okex_df['bid1']*0.001+poloniex_df['ask1']*0.0015
         # cost_ok_sell.name='cost_ok_sell'
         # cost_ok_buy=okex_df['ask1']*0.001+poloniex_df['bid1']*0.0015
@@ -100,6 +101,17 @@ def parse(date,mode):
         # res_df.plot()
        
         plt.show()
+    else:
+        profit_ok_sell=okex_df['bid1']-poloniex_df['ask1']-(okex_df['bid1']*0.002+poloniex_df['ask1']*0.0025)
+        profit_ok_sell.name='ok sell and poloniex buy'
+        profit_ok_buy=poloniex_df['bid1']-okex_df['ask1']-(okex_df['ask1']*0.002+poloniex_df['bid1']*0.0025)
+        # second=poloniex_df['bid1']-okex_df['ask1']
+        profit_ok_buy.name='poloniex sell and ok buy'
+        res_df=pd.concat([profit_ok_sell,profit_ok_buy],axis=1)
+        res_df.plot()
+        plt.show()
+        # plt.figure();
+        # res_df.plot.hist(bins=20,alpha=0.5)
   
 
 
