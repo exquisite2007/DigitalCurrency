@@ -34,7 +34,7 @@ class bitfinexUtil:
 					await websocket.send(json.dumps(param))	
 					while True:
 						message = await websocket.recv()
-						data=json.loads(message)
+						res=json.loads(message)
 						if type(res) is not list:
 							continue
 						data=res[1]
@@ -42,20 +42,20 @@ class bitfinexUtil:
 							self.ORDER_BOOK['ask']={}
 							self.ORDER_BOOK['bid']={}
 							for item in data[1][25:25+BOOK_LIMIT]:#snapshot
-								self.ORDER_BOOK['ask'][item[0]]=-item[1]
+								self.ORDER_BOOK['ask'][str(item[0])]=-item[1]
 							for item in data[1][:BOOK_LIMIT]:#snapshot
-								self.ORDER_BOOK['bid'][item[0]]=item[1]								
+								self.ORDER_BOOK['bid'][str(item[0])]=item[1]								
 						elif len(data)==3:
 							if item[2]>0:#bid
-								if item[1]==0 and item[0] in self.ORDER_BOOK['bid']:
-									del self.ORDER_BOOK['bid'][item[0]]
+								if item[1]==0 and str(item[0]) in self.ORDER_BOOK['bid']:
+									del self.ORDER_BOOK['bid'][str(item[0])]
 								else:
-									self.ORDER_BOOK['bid'][item[0]]=item[2]
+									self.ORDER_BOOK['bid'][str(item[0])]=item[2]
 							else:
-								if item[1]==0 and item[0] in self.ORDER_BOOK['ask']:
-									del self.ORDER_BOOK['ask'][item[0]]
+								if item[1]==0 and str(item[0]) in self.ORDER_BOOK['ask']:
+									del self.ORDER_BOOK['ask'][str(item[0])]
 								else:
-									self.ORDER_BOOK['ask'][item[0]]=-item[2]
+									self.ORDER_BOOK['ask'][str(item[0])]=-item[2]
 							
 						await trade_handler()
 				except Exception as e:
