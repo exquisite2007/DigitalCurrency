@@ -54,13 +54,24 @@ class bitfinexUtil:
 								else:
 									self.ORDER_BOOK['ask'][item[0]]=-item[2]
 							
-						await trade_handler()
+						await trade_handler(self)
 				except Exception as e:
 					self.ORDER_BOOK={}
 					logger.error('ERROR happen in bitfinex connection:{}'.format(e))
 					websocket.close()
-async def test():
-	print('nothing here')
+	def get_orderbook_head(self):
+		if len(self.ORDER_BOOK)>0:
+			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
+			ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
+			ask_head=float(ask_head)
+			bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
+			bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
+			bid_head=float(bid_head)
+			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
+		else:
+			return None
+async def test(self):
+	print('nothing here:{}'.format(self.get_orderbook_head()))
 def main(argv=None):
 	parser = OptionParser()
 	parser.add_option("-m", "--mode", dest="mode", help="0-wallet,1-buy,2-sell")
