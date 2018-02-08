@@ -41,21 +41,21 @@ class bitfinexUtil:
 						if len(data) >3:
 							self.ORDER_BOOK['ask']={}
 							self.ORDER_BOOK['bid']={}
-							for item in data[1][25:25+BOOK_LIMIT]:#snapshot
-								self.ORDER_BOOK['ask'][str(item[0])]=-item[1]
-							for item in data[1][:BOOK_LIMIT]:#snapshot
-								self.ORDER_BOOK['bid'][str(item[0])]=item[1]								
+							for item in data[25:25+BOOK_LIMIT]:#snapshot
+								self.ORDER_BOOK['ask'][item[0]]=-item[1]
+							for item in data[:BOOK_LIMIT]:#snapshot
+								self.ORDER_BOOK['bid'][item[0]]=item[1]								
 						elif len(data)==3:
-							if item[2]>0:#bid
-								if item[1]==0 and str(item[0]) in self.ORDER_BOOK['bid']:
-									del self.ORDER_BOOK['bid'][str(item[0])]
+							if data[2]>0:#bid
+								if data[1]==0 and data[0] in self.ORDER_BOOK['bid']:
+									del self.ORDER_BOOK['bid'][data[0]]
 								else:
-									self.ORDER_BOOK['bid'][str(item[0])]=item[2]
+									self.ORDER_BOOK['bid'][data[0]]=data[2]
 							else:
-								if item[1]==0 and str(item[0]) in self.ORDER_BOOK['ask']:
-									del self.ORDER_BOOK['ask'][str(item[0])]
+								if data[1]==0 and data[0] in self.ORDER_BOOK['ask']:
+									del self.ORDER_BOOK['ask'][data[0]]
 								else:
-									self.ORDER_BOOK['ask'][str(item[0])]=-item[2]
+									self.ORDER_BOOK['ask'][data[0]]=-data[2]
 							
 						await trade_handler()
 				except Exception as e:
