@@ -63,7 +63,6 @@ class bitfinexUtil:
 					logger.error('ERROR happen in bitfinex connection:{}'.format(e))
 					websocket.close()
 	def get_orderbook_head(self):
-		print('here{}'.format(self.ORDER_BOOK))
 		if len(self.ORDER_BOOK)>0:
 			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
 			ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
