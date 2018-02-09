@@ -56,7 +56,7 @@ async def trade_handler_process():
 		if poloniex_buy_profit>-0.01:
 			min_volume=min([poloniex_ask_head_volume,ok_bid_head_volume,okexUtil.get_sell_avaliable_amount(),poloniexUtil.get_buy_avaliable_amount(poloniex_ask_head),MAX_TRADE_SIZE])
 			if min_volume< 0.01 and min_volume*poloniex_ask_head<1:
-				logger.debug('[trade]no enough volume for trade in poloniex buy,give up:{}'.format(ok_buy_profit))
+				logger.debug('[trade]no enough volume for trade in poloniex buy,give up:{}'.format(poloniex_buy_profit))
 			else:
 				response1 = await okexUtil.sell(ok_bid_head,min_volume)
 				response2 = await poloniexUtil.buy(poloniex_ask_head,min_volume)
