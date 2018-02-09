@@ -33,7 +33,14 @@ def initAll():
 	else:
 		logger.error('please check you exchange access key exist in your environment')
 		sys.exit()
-async def trade_handler_process():
+trade_lock=False
+async def trade_handler():
+	global trade_lock
+	#at a time ,only one trade can be processed
+	#at same time, not block other order book update
+	if trade_lock:
+		logger.debug('TradeLocked ignore the orderbook update')
+		return
 	ok_head=okexUtil.get_orderbook_head()
 	poloniex_head=poloniexUtil.get_orderbook_head()
 	if ok_head is not None and poloniex_head is not None:
@@ -43,14 +50,16 @@ async def trade_handler_process():
 		
 		ok_buy_profit=poloniex_bid_head-ok_ask_head-(poloniex_bid_head*0.0025+ok_ask_head*0.002)
 		if ok_buy_profit>0.1:
+
 			min_volume=min([poloniex_bid_head_volume,ok_ask_head_volume,okexUtil.get_buy_avaliable_amount(ok_ask_head),poloniexUtil.get_sell_avaliable_amount(),MAX_TRADE_SIZE])
-			
 			if min_volume< 0.01 and min_volume*poloniex_bid_head<1:
 				logger.debug('[trade]no enough volume for trade in ok buy,give up:{}'.format(ok_buy_profit))
 			else:
+				trade_lock=True
 				response1 = await okexUtil.buy(ok_ask_head,min_volume)
 				response2 = await poloniexUtil.sell(poloniex_bid_head,min_volume)
 				logger.info('[trade]Finish okex buy:{},{}. profit:{}'.format(str(response1),str(response2),ok_buy_profit))
+				trade_lock=False
 
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.002)
 		if poloniex_buy_profit>-0.01:
@@ -58,19 +67,17 @@ async def trade_handler_process():
 			if min_volume< 0.01 and min_volume*poloniex_ask_head<1:
 				logger.debug('[trade]no enough volume for trade in poloniex buy,give up:{}'.format(poloniex_buy_profit))
 			else:
+				trade_lock=True
 				response1 = await okexUtil.sell(ok_bid_head,min_volume)
 				response2 = await poloniexUtil.buy(poloniex_ask_head,min_volume)
+				trade_lock=False
 				logger.info('[trade]Finish poloniex buy:{},{}. profit:{}'.format(str(response1),str(response2),poloniex_buy_profit))
 		logger.debug('buy_profit:{}|{}|{}|{}'.format(ok_head,poloniex_head,ok_buy_profit,poloniex_buy_profit))
 
 	else:
 		logger.error('some error happen in orderbook monitor:{},{}'.format(ok_head,poloniex_head))
-async def trade_handler():	
-	await lock
-	try:
-		await trade_handler_process()
-	finally:
-		lock.release()
+
+
 
 
 async def refreshWallet():
