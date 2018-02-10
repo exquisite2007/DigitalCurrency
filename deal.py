@@ -56,9 +56,8 @@ async def trade_handler():
 				logger.debug('[trade]no enough volume for trade in ok buy,give up:{}'.format(ok_buy_profit))
 			else:
 				trade_lock=True
-				response1 = await okexUtil.buy(ok_ask_head,min_volume)
-				response2 = await poloniexUtil.sell(poloniex_bid_head,min_volume)
-				logger.info('[trade]Finish okex buy:{},{}. profit:{}'.format(str(response1),str(response2),ok_buy_profit))
+				results = await asyncio.gather(okexUtil.buy(ok_ask_head,min_volume),poloniexUtil.sell(poloniex_bid_head,min_volume),)
+				logger.info('[trade]Finish okex buy:{!r}. profit:{}'.format(results,ok_buy_profit))
 				trade_lock=False
 
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(poloniex_ask_head*0.0025+ok_bid_head*0.002)
@@ -68,10 +67,9 @@ async def trade_handler():
 				logger.debug('[trade]no enough volume for trade in poloniex buy,give up:{}'.format(poloniex_buy_profit))
 			else:
 				trade_lock=True
-				response1 = await okexUtil.sell(ok_bid_head,min_volume)
-				response2 = await poloniexUtil.buy(poloniex_ask_head,min_volume)
+				results = await asyncio.gather(okexUtil.sell(ok_bid_head,min_volume),poloniexUtil.buy(poloniex_ask_head,min_volume),)
 				trade_lock=False
-				logger.info('[trade]Finish poloniex buy:{},{}. profit:{}'.format(str(response1),str(response2),poloniex_buy_profit))
+				logger.info('[trade]Finish poloniex buy:{!r}. profit:{}'.format(results,poloniex_buy_profit))
 		logger.debug('buy_profit:{}|{}|{}|{}'.format(ok_head,poloniex_head,ok_buy_profit,poloniex_buy_profit))
 
 	else:
