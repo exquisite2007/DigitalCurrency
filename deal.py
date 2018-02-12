@@ -94,7 +94,7 @@ async def handle_unfinish_order():
 async def deal_handler():
 	initAll()
 	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),refreshWallet(),handle_unfinish_order()],return_when=asyncio.FIRST_COMPLETED,)
-async def backgroud():
+async def backgroud(app):
 	app.loop.create_task(deal_handler())
 
 
