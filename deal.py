@@ -128,5 +128,5 @@ app = web.Application()
 app.router.add_get('/wallet', get_wallet)
 
 app.router.add_post('/update', change_threshold)
-app.on_startup.append(test_handler)
+app.on_startup.append(backgroud)
 web.run_app(app,host='127.0.0.1')
