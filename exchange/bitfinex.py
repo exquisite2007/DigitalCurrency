@@ -24,6 +24,7 @@ class bitfinexUtil:
 		self.CURRENCY=[self.CURRENT_PAIR[:3],self.CURRENT_PAIR[-3:]]
 		self.WALLET={}
 		self.ORDER_BOOK={}
+		self.TAKER_FEE=0.002
 	access_key=None
 	secret_key=None
 	async def order_book(self,trade_handler):

@@ -13,11 +13,15 @@ logger = logging.getLogger("deal")
 
 class okexUtil:
 	def __init__(self,pair):
+		self.name='OKEX'
 		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt'}
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=self.CURRENT_PAIR.split('_')
 		self.WALLET={}
 		self.ORDER_BOOK={}
+		self.TAKER_FEE=0.002
+		# 补偿，买一个币，只能得到（1-self.TAKER_FEE）个币，为了保证两边币的数量一致，增加一个补偿量
+		self.BUY_PATCH=(1+self.TAKER_FEE)*self.TAKER_FEE
 	access_key=None
 	secret_key=None
 
@@ -40,17 +44,17 @@ class okexUtil:
 			url="https://www.okex.com/api/v1/"+command
 			return json.loads(requests.post(url,data=params).text)
 		except Exception as e:
-			logger.error('[OKEX] request error happen:{}'.format(e))
-			return None
+			raise Exeption(self.name,'Error in handleRequest:{}|{}'.format(command,params))
 
 
-	async def buy(self,rate,amount):		
-		self.WALLET[self.CURRENCY[1]]['free']-=amount*rate
-		self.WALLET[self.CURRENCY[1]]['locked']+=amount*rate
-		params={'symbol':self.CURRENT_PAIR,'type':'buy','price':rate,'amount':amount}
+	async def buy(self,rate,amount):
+		patch_amount=amount(1+self.BUY_PATCH)	
+		self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
+		self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
+		params={'symbol':self.CURRENT_PAIR,'type':'buy','price':rate,'amount':patch_amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
-		logger.debug('[OKEX] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
+		logger.debug('[OKEX] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
 		return res
 
 
@@ -65,12 +69,14 @@ class okexUtil:
 		return res
 	async def unfinish_order(self):
 		loop=asyncio.get_event_loop()
-		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{})
+		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{'symbol':self.CURRENT_PAIR,'order_id':-1})
+		print(res)
 		logger.debug('[OKEX] unfinished order get result:{}'.format(res))
 		if res is not None and res['result']==True:
 			return res['orders']
 		else:
-			return None
+			raise Exeption(self.name,'Error in unfinish_order')
+
 	async def cancel_order(self,orderId,pair):
 		loop=asyncio.get_event_loop()
 		params={'order_id':orderId,'symbol':pair}
@@ -78,7 +84,7 @@ class okexUtil:
 		if res is not None and res['result']==True:
 			return res
 		else:
-			return None
+			raise Exeption(self.name,'Error happen in cancel order {}|{}'.format(orderId,pair))
 
 	async def init_wallet(self):
 		loop=asyncio.get_event_loop()
@@ -89,7 +95,7 @@ class okexUtil:
 			self.WALLET[self.CURRENCY[1]]={'free':float(res['info']['funds']['free'][self.CURRENCY[1]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[1]])}
 			logger.info('Finish load okex wallet:{}'.format(self.WALLET))
 		else:
-			logger.error('Error for update poloniex wallet:{}'.format(res))
+			raise Exeption(self.name,'Error in init_wallet')
 
 	async def order_book(self,trade_handler):
 		channel='ok_sub_spot_'+self.CURRENT_PAIR+'_depth_5'
@@ -129,31 +135,36 @@ class okexUtil:
 			bid_head=float(bid_head)
 			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
 		else:
-			return None
-	def get_sell_avaliable_amount(self):
-		if len(self.WALLET)>0:
-			return self.WALLET[self.CURRENCY[0]]['free']
+			raise Exeption(self.name,'Error in get_orderbook_head')
+	def get_sell_info(self,rate):
+		if len(self.WALLET)<=0:
+			raise Exeption(self.name,'Error in get_sell_info')
 		else:
-			return 0
-	def get_buy_avaliable_amount(self,rate):
-		if len(self.WALLET)>0:
-			return self.WALLET[self.CURRENCY[1]]['free']/rate
+			avaliable_amount=self.WALLET[self.CURRENCY[0]]['free']
+			cost=self.TAKER_FEE*rate
+			return(avaliable_amount,cost)
+	def get_buy_info(self,rate):
+		if len(self.WALLET)<=0:
+			raise Exeption(self.name,'Error in get_buy_info')
 		else:
-			return 0
+			avaliable_amount=self.WALLET[self.CURRENCY[1]]['free']/rate/(1+self.BUY_PATCH)
+			cost=self.TAKER_FEE*rate*(1+self.BUY_PATCH)
+			return(avaliable_amount,cost)
+
 	async def unfinish_order_handler(self):
 		res = await self.unfinish_order()
-		if res is not None and len(res)>0:
-			for item in res:
-				head_res=self.get_orderbook_head()
-				if head_res is not None and item['type']=='sell' and head_res[2]-item['price']*1.001>0:
-					cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
-					if cancel_res is not None and cancel_res['result']==True:
-						await self.sell(head_res[2],item['amount'])
+		# if res is not None and len(res)>0:
+		# 	for item in res:
+		# 		head_res=self.get_orderbook_head()
+		# 		if head_res is not None and item['type']=='sell' and head_res[2]-item['price']*1.001>0:
+		# 			cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
+		# 			if cancel_res is not None and cancel_res['result']==True:
+		# 				await self.sell(head_res[2],item['amount'])
 
-				if head_res is not None and item['type']=='buy' and item['price']*0.-head_res[0]*1.001>0:
-					cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
-					if cancel_res is not None and cancel_res['result']==True:
-						await self.buy(head_res[0],item['amount'])
+		# 		if head_res is not None and item['type']=='buy' and item['price']*0.-head_res[0]*1.001>0:
+		# 			cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
+		# 			if cancel_res is not None and cancel_res['result']==True:
+		# 				await self.buy(head_res[0],item['amount'])
 
 
 def main(argv=None):
@@ -162,7 +173,9 @@ def main(argv=None):
 	parser.add_option("-r", "--rate", dest="rate", help="rate")
 	parser.add_option("-a", "--amount", dest="amount", help="amount")
 	parser.set_defaults(mode=0)
-	util=okexUtil()
+	util=okexUtil('ETC_USDT')
+	loop=asyncio.get_event_loop()
+
 	
 	if 'ok_access_key' not in os.environ:
 		return
@@ -170,7 +183,8 @@ def main(argv=None):
 	util.secret_key=os.environ['ok_secret_key']
 	(opts, args) = parser.parse_args(argv)
 
-
+	if int(opts.mode) == 0:
+		loop.run_until_complete(util.unfinish_order())
 
 if __name__ == "__main__":
 	sys.exit(main())

@@ -17,11 +17,15 @@ logger = logging.getLogger("deal")
 BOOK_LIMIT=10
 class poloniexUtil:
 	def __init__(self,pair):
+		self.name='poloniex'
 		self.PAIR_MAP={'BTC_ETH':'BTC_ETH','BTC_LTC':'BTC_LTC','BTC_USDT':'USDT_BTC','ETC_USDT':'USDT_ETC'}
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=pair.split('_')
 		self.WALLET={}
 		self.ORDER_BOOK={}
+		self.TAKER_FEE=0.0025
+		# 补偿，买一个币，只能得到（1-self.TAKER_FEE）个币，为了保证两边币的数量一致，增加一个补偿量
+		self.BUY_PATCH=(1+self.TAKER_FEE)*self.TAKER_FEE
 	access_key=None
 	secret_key=None
 
@@ -45,20 +49,20 @@ class poloniexUtil:
 			r = requests.post(url, headers=headers, data=paybytes)
 			return json.loads(r.text)
 		except Exception as e:
-			logger.error('[poloniex] error happen in request:{}'.format(e))
-			return None
+			raise Exeption(self.name,'Error in handleRequest:{},{}'.format(command,params))
 		
 	async def buy(self,rate,amount):
-		self.WALLET[self.CURRENCY[1]]['free']-=amount*rate
-		self.WALLET[self.CURRENCY[1]]['locked']+=amount*rate
-		params={'currencyPair':self.CURRENT_PAIR,'rate':rate,'amount':amount}
+		patch_amount=amount(1+self.BUY_PATCH)
+		self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
+		self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
+		params={'currencyPair':self.CURRENT_PAIR,'rate':rate,'amount':patch_amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'buy',params)
-		logger.debug('[poloniex] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
+		logger.debug('[poloniex] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
 		if res is not None:
 			return res
 		else:
-			return None
+			raise Exeption(self.name,'Error in buy:{}|{}'.format(rate,amount))
 	async def sell(self,rate,amount):
 		self.WALLET[self.CURRENCY[0]]['free']-=amount
 		self.WALLET[self.CURRENCY[0]]['locked']+=amount
@@ -69,7 +73,8 @@ class poloniexUtil:
 		if res is not None:
 			return res
 		else:
-			return None
+			raise Exeption(self.name,'Error in sell:{}|{}'.format(rate,amount))
+
 	async def unfinish_order(self,pair):
 		params={'currencyPair':self.CURRENT_PAIR}
 		loop=asyncio.get_event_loop()
@@ -78,7 +83,7 @@ class poloniexUtil:
 			logger.debug('[poloniex] unfinish_order :{}.get result:{}'.format(pair,res))
 			return res
 		else:
-			return None
+			raise Exeption(self.name,'Error in unfinish_order')
 	async def move_order(self,orderId,rate):
 		params={'orderNumber':orderId}
 		loop=asyncio.get_event_loop()
@@ -87,14 +92,14 @@ class poloniexUtil:
 			logger.debug('[poloniex] move order:{}|{}.get result:{}'.format(orderId,rate,res))
 			return res
 		else:
-			return None
+			raise Exeption(self.name,'Error in move_order:{}|{}'.format(orderId,rate))
 	def cancel_order(self,orderId):
 		params={'orderNumber':orderId}
 		res=self.handleRequest('cancelOrder',params)
 		if res is not None:
 			return res
 		else:
-			return None
+			raise Exeption(self.name,'Error in cancel_order:{orderId}'.format(orderId))
 
 	async def init_wallet(self):
 		loop=asyncio.get_event_loop()
@@ -105,7 +110,7 @@ class poloniexUtil:
 			self.WALLET[self.CURRENCY[1]]={'free':float(res[self.CURRENCY[1]]['available']),'locked':float(res[self.CURRENCY[1]]['onOrders'])}
 			logger.info('Finish load poloniex wallet:{}'.format(self.WALLET))
 		else:
-			logger.error('Error for update poloniex wallet:{}'.format(res))
+			raise Exeption(self.name,'Error in init_wallet')
 
 	async def order_book(self,trade_handler):
 		while True:
@@ -159,27 +164,33 @@ class poloniexUtil:
 			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
 		else:
 			return None
-	def get_sell_avaliable_amount(self):
-		if len(self.WALLET)>0:
-			return self.WALLET[self.CURRENCY[0]]['free']
+
+
+	def get_sell_info(self,rate):
+		if len(self.WALLET)<=0:
+			raise Exeption(self.name,'Error in get_sell_info')
 		else:
-			return 0
-	def get_buy_avaliable_amount(self,rate):
-		if len(self.WALLET)>0:
-			return self.WALLET[self.CURRENCY[1]]['free']/rate
+			avaliable_amount=self.WALLET[self.CURRENCY[0]]['free']
+			cost=self.TAKER_FEE*rate
+			return(avaliable_amount,cost)
+	def get_buy_info(self,rate):
+		if len(self.WALLET)<=0:
+			raise Exeption(self.name,'Error in get_buy_info')
 		else:
-			return 0
+			avaliable_amount=self.WALLET[self.CURRENCY[1]]['free']/rate/(1+self.BUY_PATCH)
+			cost=self.TAKER_FEE*rate*(1+self.BUY_PATCH)
+			return(avaliable_amount,cost)
+
 	async def unfinish_order_handler(self):
 		res = await self.unfinish_order(self.CURRENT_PAIR)
-		head=self.get_orderbook_head()
-		if res is not None and head is not None:
-			lst=[]
-			for item in res:
-				if item['type']=='sell' and float(item['rate'])<head[2]:
-					lst.append(self.move_order(item['orderNumber'],head[2]))
-				if item['type']=='buy' and float(item['rate'])>head[0]:
-					lst.append(self.move_order(item['orderNumber'],head[0]))
-			logger.info("Poloniex move order:{}".format(res))
-			if len(lst)>0:
-				await asyncio.wait(lst,return_when=asyncio.FIRST_COMPLETED,)
+		# head=self.get_orderbook_head()
+		# if res is not None and head is not None:
+		# 	lst=[]
+		# 	for item in res:
+		# 		if item['type']=='sell' and float(item['rate'])<head[2]:
+		# 			lst.append(self.move_order(item['orderNumber'],head[2]))
+		# 		if item['type']=='buy' and float(item['rate'])>head[0]:
+		# 			lst.append(self.move_order(item['orderNumber'],head[0]))
+		# 	if len(lst)>0:
+		# 		await asyncio.wait(lst,return_when=asyncio.FIRST_COMPLETED,)
 
