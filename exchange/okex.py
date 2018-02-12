@@ -70,7 +70,6 @@ class okexUtil:
 	async def unfinish_order(self):
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{'symbol':self.CURRENT_PAIR,'order_id':-1})
-		print(res)
 		logger.debug('[OKEX] unfinished order get result:{}'.format(res))
 		if res is not None and res['result']==True:
 			return res['orders']

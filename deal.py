@@ -70,7 +70,13 @@ async def trade_handler():
 				results = await asyncio.gather(okexUtil.sell(ok_bid_head,min_volume),poloniexUtil.buy(poloniex_ask_head,min_volume),)
 				trade_lock=False
 				logger.info('[trade]Finish poloniex buy:{!r}. profit:{}'.format(results,poloniex_buy_profit))
-		logger.debug('buy_profit:{}|{}|{}|{}'.format(ok_head,poloniex_head,ok_buy_profit,poloniex_buy_profit))
+		logger.debug('buy_profit:{}:{}|{}:{}|{}|{}:{}|{}:{}|{}'.format(
+			poloniex_bid_head,poloniex_bid_head_volume,
+			ok_ask_head,ok_ask_head_volume,
+			ok_buy_profit,
+			ok_bid_head,ok_bid_head_volume,
+			poloniex_ask_head,poloniex_ask_head_volume,
+			poloniex_buy_profit))
 	except Exception as e:
 		logger.error("Trade_handler_error:{}".format(e))
 		trade_lock=False

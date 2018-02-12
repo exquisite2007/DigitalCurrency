@@ -123,7 +123,6 @@ class poloniexUtil:
 						res=json.loads(message)
 						if len(res)<2:
 							continue
-						logger.debug('poloniex:{}'.format(res))
 						for item in res[2]:
 							if item[0] == 'i':
 								book_size=0
