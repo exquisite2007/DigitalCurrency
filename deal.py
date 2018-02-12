@@ -116,13 +116,13 @@ async def change_threshold(request):
 	ok_buy_thres = params['ok_buy_thres']
 	poloniex_buy_thres = params['poloniex_buy_thres']
 	if ok_buy_thres+poloniex_buy_thres <0:
-		return 'failed, not in range'
+		return  web.json_response({'msg':'failed, not in range'})
 	if abs(ok_buy_thres)>0.5 or abs(poloniex_buy_thres)>0.5:
-		return 'failed, not in range'
+		return  web.json_response({'msg':'failed, not in range1'})
 	OK_BUY_THRES=ok_buy_thres
 	POLO_BUY_THRES=poloniex_buy_thres
 	logger.info('position changed. okex:{},poloniex:{}'.format(OK_BUY_THRES,POLO_BUY_THRES))
-	return  'successfully update'
+	return  web.json_response({'msg':'successfully update'})
 app = web.Application()
 app.router.add_get('/wallet', get_wallet)
 app.router.add_get('/threshold', get_threshold)
