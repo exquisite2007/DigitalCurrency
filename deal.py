@@ -51,7 +51,7 @@ async def trade_handler():
 		(poloniex_availiable_sell,poloniex_sell_one_cost)=poloniexUtil.get_sell_info(poloniex_bid_head)
 
 		ok_buy_profit=poloniex_bid_head-ok_ask_head -(poloniex_sell_one_cost+ok_buy_one_cost)
-		if ok_buy_profit>0.02:
+		if ok_buy_profit>0:
 			min_volume=min([poloniex_bid_head_volume,ok_ask_head_volume,ok_avaliable_buy,poloniex_availiable_sell,MAX_TRADE_SIZE])
 			if min_volume< 0.01 or min_volume*poloniex_bid_head<1:
 				logger.debug('[trade]no enough volume for trade in ok buy,give up:{}'.format(ok_buy_profit))
@@ -61,7 +61,7 @@ async def trade_handler():
 				logger.info('[trade]Finish okex buy:{!r}. profit:{}'.format(results,ok_buy_profit))
 				trade_lock=False
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(ok_sell_one_cost+poloniex_buy_one_cost)
-		if poloniex_buy_profit>0.5:
+		if poloniex_buy_profit>0.1:
 			min_volume=min([poloniex_ask_head_volume,ok_bid_head_volume,ok_avaliable_sell,poloniex_availiable_buy,MAX_TRADE_SIZE])
 			if min_volume< 0.01 or min_volume*poloniex_ask_head<1:
 				logger.debug('[trade]no enough volume for trade in poloniex buy,give up:{}'.format(poloniex_buy_profit))
