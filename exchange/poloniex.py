@@ -52,7 +52,7 @@ class poloniexUtil:
 			raise Exception(self.name,'Error in handleRequest:{},{}'.format(command,params))
 		
 	async def buy(self,rate,amount):
-		patch_amount=amount(1+self.BUY_PATCH)
+		patch_amount=amount*(1+self.BUY_PATCH)
 		self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
 		self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
 		params={'currencyPair':self.CURRENT_PAIR,'rate':rate,'amount':patch_amount}

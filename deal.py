@@ -21,7 +21,7 @@ SUPPOR_PAIR='ETC_USDT'
 MAX_TRADE_SIZE=3
 okexUtil=okexUtil(SUPPOR_PAIR)
 poloniexUtil=poloniexUtil(SUPPOR_PAIR)
-OK_BUY_THRES=0.01
+OK_BUY_THRES=0.1
 POLO_BUY_THRES=0.1
 
 def initAll():
