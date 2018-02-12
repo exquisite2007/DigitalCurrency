@@ -99,7 +99,6 @@ async def backgroud(app):
 
 
 async def get_wallet(request):
-	body=await request.json()
 	res={}
 	res['ok']=okexUtil.WALLET
 	res['poloniex']=poloniexUtil.WALLET
@@ -126,7 +125,7 @@ async def change_threshold(request):
 	return  'successfully update'
 app = web.Application()
 app.router.add_get('/wallet', get_wallet)
-
-app.router.add_post('/update', change_threshold)
+app.router.add_get('/threshold', get_threshold)
+app.router.add_post('/threshold', change_threshold)
 app.on_startup.append(backgroud)
 web.run_app(app,host='127.0.0.1')
