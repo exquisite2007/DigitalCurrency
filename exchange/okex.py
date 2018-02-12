@@ -44,7 +44,7 @@ class okexUtil:
 			url="https://www.okex.com/api/v1/"+command
 			return json.loads(requests.post(url,data=params).text)
 		except Exception as e:
-			raise Exeption(self.name,'Error in handleRequest:{}|{}'.format(command,params))
+			raise Exception(self.name,'Error in handleRequest:{}|{}'.format(command,params))
 
 
 	async def buy(self,rate,amount):
@@ -74,7 +74,7 @@ class okexUtil:
 		if res is not None and res['result']==True:
 			return res['orders']
 		else:
-			raise Exeption(self.name,'Error in unfinish_order')
+			raise Exception(self.name,'Error in unfinish_order')
 
 	async def cancel_order(self,orderId,pair):
 		loop=asyncio.get_event_loop()
@@ -83,7 +83,7 @@ class okexUtil:
 		if res is not None and res['result']==True:
 			return res
 		else:
-			raise Exeption(self.name,'Error happen in cancel order {}|{}'.format(orderId,pair))
+			raise Exception(self.name,'Error happen in cancel order {}|{}'.format(orderId,pair))
 
 	async def init_wallet(self):
 		loop=asyncio.get_event_loop()
@@ -94,7 +94,7 @@ class okexUtil:
 			self.WALLET[self.CURRENCY[1]]={'free':float(res['info']['funds']['free'][self.CURRENCY[1]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[1]])}
 			logger.info('Finish load okex wallet:{}'.format(self.WALLET))
 		else:
-			raise Exeption(self.name,'Error in init_wallet')
+			raise Exception(self.name,'Error in init_wallet')
 
 	async def order_book(self,trade_handler):
 		channel='ok_sub_spot_'+self.CURRENT_PAIR+'_depth_5'
@@ -134,17 +134,17 @@ class okexUtil:
 			bid_head=float(bid_head)
 			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
 		else:
-			raise Exeption(self.name,'Error in get_orderbook_head')
+			raise Exception(self.name,'Error in get_orderbook_head')
 	def get_sell_info(self,rate):
 		if len(self.WALLET)<=0:
-			raise Exeption(self.name,'Error in get_sell_info')
+			raise Exception(self.name,'Error in get_sell_info')
 		else:
 			avaliable_amount=self.WALLET[self.CURRENCY[0]]['free']
 			cost=self.TAKER_FEE*rate
 			return(avaliable_amount,cost)
 	def get_buy_info(self,rate):
 		if len(self.WALLET)<=0:
-			raise Exeption(self.name,'Error in get_buy_info')
+			raise Exception(self.name,'Error in get_buy_info')
 		else:
 			avaliable_amount=self.WALLET[self.CURRENCY[1]]['free']/rate/(1+self.BUY_PATCH)
 			cost=self.TAKER_FEE*rate*(1+self.BUY_PATCH)

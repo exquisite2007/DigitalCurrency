@@ -49,7 +49,7 @@ class poloniexUtil:
 			r = requests.post(url, headers=headers, data=paybytes)
 			return json.loads(r.text)
 		except Exception as e:
-			raise Exeption(self.name,'Error in handleRequest:{},{}'.format(command,params))
+			raise Exception(self.name,'Error in handleRequest:{},{}'.format(command,params))
 		
 	async def buy(self,rate,amount):
 		patch_amount=amount(1+self.BUY_PATCH)
@@ -62,7 +62,7 @@ class poloniexUtil:
 		if res is not None:
 			return res
 		else:
-			raise Exeption(self.name,'Error in buy:{}|{}'.format(rate,amount))
+			raise Exception(self.name,'Error in buy:{}|{}'.format(rate,amount))
 	async def sell(self,rate,amount):
 		self.WALLET[self.CURRENCY[0]]['free']-=amount
 		self.WALLET[self.CURRENCY[0]]['locked']+=amount
@@ -73,7 +73,7 @@ class poloniexUtil:
 		if res is not None:
 			return res
 		else:
-			raise Exeption(self.name,'Error in sell:{}|{}'.format(rate,amount))
+			raise Exception(self.name,'Error in sell:{}|{}'.format(rate,amount))
 
 	async def unfinish_order(self,pair):
 		params={'currencyPair':self.CURRENT_PAIR}
@@ -83,7 +83,7 @@ class poloniexUtil:
 			logger.debug('[poloniex] unfinish_order :{}.get result:{}'.format(pair,res))
 			return res
 		else:
-			raise Exeption(self.name,'Error in unfinish_order')
+			raise Exception(self.name,'Error in unfinish_order')
 	async def move_order(self,orderId,rate):
 		params={'orderNumber':orderId}
 		loop=asyncio.get_event_loop()
@@ -92,14 +92,14 @@ class poloniexUtil:
 			logger.debug('[poloniex] move order:{}|{}.get result:{}'.format(orderId,rate,res))
 			return res
 		else:
-			raise Exeption(self.name,'Error in move_order:{}|{}'.format(orderId,rate))
+			raise Exception(self.name,'Error in move_order:{}|{}'.format(orderId,rate))
 	def cancel_order(self,orderId):
 		params={'orderNumber':orderId}
 		res=self.handleRequest('cancelOrder',params)
 		if res is not None:
 			return res
 		else:
-			raise Exeption(self.name,'Error in cancel_order:{orderId}'.format(orderId))
+			raise Exception(self.name,'Error in cancel_order:{orderId}'.format(orderId))
 
 	async def init_wallet(self):
 		loop=asyncio.get_event_loop()
@@ -110,7 +110,7 @@ class poloniexUtil:
 			self.WALLET[self.CURRENCY[1]]={'free':float(res[self.CURRENCY[1]]['available']),'locked':float(res[self.CURRENCY[1]]['onOrders'])}
 			logger.info('Finish load poloniex wallet:{}'.format(self.WALLET))
 		else:
-			raise Exeption(self.name,'Error in init_wallet')
+			raise Exception(self.name,'Error in init_wallet')
 
 	async def order_book(self,trade_handler):
 		while True:
@@ -167,14 +167,14 @@ class poloniexUtil:
 
 	def get_sell_info(self,rate):
 		if len(self.WALLET)<=0:
-			raise Exeption(self.name,'Error in get_sell_info')
+			raise Exception(self.name,'Error in get_sell_info')
 		else:
 			avaliable_amount=self.WALLET[self.CURRENCY[0]]['free']
 			cost=self.TAKER_FEE*rate
 			return(avaliable_amount,cost)
 	def get_buy_info(self,rate):
 		if len(self.WALLET)<=0:
-			raise Exeption(self.name,'Error in get_buy_info')
+			raise Exception(self.name,'Error in get_buy_info')
 		else:
 			avaliable_amount=self.WALLET[self.CURRENCY[1]]['free']/rate/(1+self.BUY_PATCH)
 			cost=self.TAKER_FEE*rate*(1+self.BUY_PATCH)
