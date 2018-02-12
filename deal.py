@@ -37,6 +37,8 @@ def initAll():
 trade_lock=False
 async def trade_handler():
 	global trade_lock
+	global OK_BUY_THRES
+	global POLO_BUY_THRES
 	#at a time ,only one trade can be processed
 	#at same time, not block other order book update
 	if trade_lock:
@@ -119,6 +121,8 @@ async def change_threshold(request):
 		return  web.json_response({'msg':'failed, not in range'})
 	if abs(ok_buy_thres)>0.5 or abs(poloniex_buy_thres)>0.5:
 		return  web.json_response({'msg':'failed, not in range1'})
+	global OK_BUY_THRES
+	global POLO_BUY_THRES
 	OK_BUY_THRES=ok_buy_thres
 	POLO_BUY_THRES=poloniex_buy_thres
 	logger.info('position changed. okex:{},poloniex:{}'.format(OK_BUY_THRES,POLO_BUY_THRES))
