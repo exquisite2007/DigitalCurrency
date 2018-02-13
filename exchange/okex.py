@@ -102,10 +102,11 @@ class okexUtil:
 			try:
 				logger.info('OKEX BOOK start to connect')
 				async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
-					param={'event':'addChannel','channel':channel}
-					await websocket.send(json.dumps(param))
-					while True:
-						try:
+					try:
+						logger.info('OKEX enter communication')
+						param={'event':'addChannel','channel':channel}
+						await websocket.send(json.dumps(param))
+						while True:
 							message = await websocket.recv()
 							res=json.loads(message)
 							if type(res) is list and res[0]['channel'].startswith('ok'):
@@ -118,9 +119,11 @@ class okexUtil:
 									bid_map[item[0]]=float(item[1])
 								self.ORDER_BOOK['bid']=bid_map
 							await trade_handler()
-						except Exception as e:
-							self.ORDER_BOOK={}
-							logger.error('OKEX receive msg error {}'.format(e))
+					except Exception as e:
+						self.ORDER_BOOK={}
+						websocket.close()
+						logger.error('OKEX receive msg error {}'.format(e))
+
 			except  Exception as le:
 				self.ORDER_BOOK={}
 				logger.error('OKEX BOOK connect:{}'.format(e))
