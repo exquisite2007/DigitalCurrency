@@ -100,26 +100,23 @@ class okexUtil:
 		channel='ok_sub_spot_'+self.CURRENT_PAIR+'_depth_5'
 		while True:
 			try:
+				logger.info('OKEX BOOK start to connect')
 				async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
-					try:
-						param={'event':'addChannel','channel':channel}
-						await websocket.send(json.dumps(param))
-						while True:
-							message = await websocket.recv()
-							res=json.loads(message)
-							if type(res) is list and res[0]['channel'].startswith('ok'):
-								ask_map={}
-								for item in res[0]['data']['asks']:
-									ask_map[item[0]]=float(item[1])
-								self.ORDER_BOOK['ask']=ask_map
-								bid_map={}
-								for item in res[0]['data']['bids']:
-									bid_map[item[0]]=float(item[1])
-								self.ORDER_BOOK['bid']=bid_map
-							await trade_handler()
-					except  Exception as e:
-						websocket.close()
-						logger.error('OKEX BOOK parse:{}'.format(e))
+					param={'event':'addChannel','channel':channel}
+					await websocket.send(json.dumps(param))
+					while True:
+						message = await websocket.recv()
+						res=json.loads(message)
+						if type(res) is list and res[0]['channel'].startswith('ok'):
+							ask_map={}
+							for item in res[0]['data']['asks']:
+								ask_map[item[0]]=float(item[1])
+							self.ORDER_BOOK['ask']=ask_map
+							bid_map={}
+							for item in res[0]['data']['bids']:
+								bid_map[item[0]]=float(item[1])
+							self.ORDER_BOOK['bid']=bid_map
+						await trade_handler()
 			except  Exception as le:
 				self.ORDER_BOOK={}
 				logger.error('OKEX BOOK connect:{}'.format(e))

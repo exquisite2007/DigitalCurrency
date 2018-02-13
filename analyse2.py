@@ -38,7 +38,7 @@ def exchange(serial_item):
     #ok buy
     ok_buy_profit=serial_item[1]-serial_item[2]-(serial_item[1]*0.002+serial_item[2]*0.0025) 
     # if ok_buy_profit >0.24809:
-    if ok_buy_profit >0.12:
+    if ok_buy_profit >-0.02:
         x['ok_c']+=1
         if  x['direction']==0:
             x['ok']+=1
@@ -47,7 +47,7 @@ def exchange(serial_item):
             print('buy:'+str(ok_buy_profit))
         return
     ok_sell_profit=serial_item[3]-serial_item[0]-(serial_item[3]*0.002+serial_item[0]*0.0025)
-    if ok_sell_profit > -0.01:
+    if ok_sell_profit > -0.02:
         x['polo_c']+=1
         if  x['direction']==1 :
             x['poloniex']+=1
@@ -58,7 +58,7 @@ def exchange(serial_item):
 
 
 def parse(date,mode):
-    conn = sqlite3.connect('orderbook_'+date+'.db')
+    conn = sqlite3.connect('data/orderbook_'+date+'.db')
     freq='5S'
     cursor = conn.cursor()
     # resLst=cursor.execute(SELECT_SQL, (exchange,pair))
@@ -101,7 +101,7 @@ def parse(date,mode):
         # res_df.plot()
        
         plt.show()
-    else:
+    elif mode==3:
         profit_ok_sell=okex_df['bid1']-poloniex_df['ask1']-(okex_df['bid1']*0.002+poloniex_df['ask1']*0.0025)
         profit_ok_sell.name='ok sell and poloniex buy'
         profit_ok_buy=poloniex_df['bid1']-okex_df['ask1']-(okex_df['ask1']*0.002+poloniex_df['bid1']*0.0025)
@@ -112,6 +112,32 @@ def parse(date,mode):
         plt.show()
         # plt.figure();
         # res_df.plot.hist(bins=20,alpha=0.5)
+    elif mode==4: #EWMA
+        profit_ok_sell=okex_df['bid1']-poloniex_df['ask1']
+        profit_ok_sell.name='ok sell and poloniex buy'
+        profit_ok_sell.name='ok sell and poloniex buy'
+        profit_ok_buy=poloniex_df['bid1']-okex_df['ask1']
+        # second=poloniex_df['bid1']-okex_df['ask1']
+        profit_ok_buy.name='poloniex sell and ok buy'
+
+        span=20
+        freq='1H'
+        ewma=pd.ewma(profit_ok_sell, span=span, freq=freq,adjust=True)
+        ewma.name='oloniex buy ewma1'
+        ewmstd=pd.ewmstd(profit_ok_sell, span=span, freq=freq)
+        ewmstd.name='oloniex buy ewmstd1'
+
+        ewma2=pd.ewma(profit_ok_buy, span=span, freq=freq,adjust=True)
+        ewma2.name='ok buy  ewma2'
+        ewmstd2=pd.ewmstd(profit_ok_buy, span=span, freq=freq)
+        ewmstd2.name='ok buy ewmstd2'
+        upper=ewma+1.5*ewmstd
+        upper.name='poloniex buy'
+        lower=ewma2+1.5*ewmstd2
+        lower.name='ok buy thres'
+        res_df=pd.concat([ewma,upper,ewma2,lower],axis=1)
+        res_df.plot()
+        plt.show()
   
 
 
