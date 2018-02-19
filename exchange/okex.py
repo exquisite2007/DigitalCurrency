@@ -125,7 +125,7 @@ class okexUtil:
 						websocket.close()
 
 			except Exception as le:
-				logger.error('OKEX BOOK connect:{}'.format(e))
+				logger.error('OKEX BOOK connect:{}'.format(le))
 				self.ORDER_BOOK={}
 
 	def get_orderbook_head(self):
