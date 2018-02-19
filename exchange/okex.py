@@ -120,13 +120,13 @@ class okexUtil:
 								self.ORDER_BOOK['bid']=bid_map
 							await trade_handler()
 					except Exception as e:
+						logger.error('OKEX receive msg error {}'.format(e))
 						self.ORDER_BOOK={}
 						websocket.close()
-						logger.error('OKEX receive msg error {}'.format(e))
 
-			except  Exception as le:
-				self.ORDER_BOOK={}
+			except Exception as le:
 				logger.error('OKEX BOOK connect:{}'.format(e))
+				self.ORDER_BOOK={}
 
 	def get_orderbook_head(self):
 		if len(self.ORDER_BOOK)>0:
