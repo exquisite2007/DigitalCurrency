@@ -58,9 +58,9 @@ async def percentile():
 	while True:
 		await asyncio.sleep(REPORT_INTERVAL)
 		if len(exch1_exch2_lst)> PERIORD:
-			exch1_exch2_lst=[:PERIORD]
+			exch1_exch2_lst=exch1_exch2_lst[-PERIORD:]
 		if len(exch2_exch1_lst) > PERIORD:
-			exch2_exch1_lst=[:PERIORD]
+			exch2_exch1_lst=exch2_exch1_lst[-PERIORD:]
 		exch1_exch2_threshold= np.percentile(exch1_exch2_lst,80)
 		exch2_exch1_threshold= np.percentile(exch2_exch1_lst,80)
 		logger.info('REPORT RES exch1_buy:{}, exch2_buy:{}'.format(exch1_exch2_threshold,exch2_exch1_threshold))
