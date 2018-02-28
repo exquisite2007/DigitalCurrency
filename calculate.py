@@ -34,6 +34,8 @@ REPORT_INTERVAL=1800
 
 async def trade_handler():
 	try:
+		global exch1_exch2_max
+		global exch2_exch1_max
 		(ok_ask_head,ok_ask_head_volume,ok_bid_head,ok_bid_head_volume)=okexUtil.get_orderbook_head()
 		(poloniex_ask_head,poloniex_ask_head_volume,poloniex_bid_head,poloniex_bid_head_volume)=poloniexUtil.get_orderbook_head()
 		
@@ -45,10 +47,16 @@ async def trade_handler():
 	except Exception as e:
 		logger.error("Trade_handler_error:{}".format(e))
 async def sampler():
+	global exch1_exch2_max
+	global exch2_exch1_max
+	global MINIST_VALUE
 	while True:
+
 		await asyncio.sleep(SAMPLE_INTERVAL)
 		exch1_exch2_lst.append(exch1_exch2_max)
 		exch2_exch1_lst.append(exch2_exch1_max)
+		exch1_exch2_max=MINIST_VALUE
+		exch2_exch1_max=MINIST_VALUE
 
 async def percentile():
 	while True:
