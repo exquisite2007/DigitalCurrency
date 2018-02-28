@@ -150,7 +150,7 @@ class poloniexUtil:
 						await trade_handler()
 				except Exception as e:
 					self.ORDER_BOOK={}
-					logger.error(e)
+					logger.error('poloniex BOOK connect:{}'.format(e))
 					websocket.close()
 	def get_orderbook_head(self):
 		if len(self.ORDER_BOOK)>0:

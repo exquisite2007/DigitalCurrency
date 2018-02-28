@@ -9,7 +9,7 @@ import logging
 from  logging.handlers import TimedRotatingFileHandler
 logger = logging.getLogger("deal")
 logger.setLevel(logging.DEBUG)
-ch = TimedRotatingFileHandler('deal.log', when='D', interval=1, backupCount=5)
+ch = TimedRotatingFileHandler('deal.log', when='D', interval=1, backupCount=3)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
