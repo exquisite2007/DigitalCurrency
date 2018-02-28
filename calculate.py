@@ -69,7 +69,10 @@ async def percentile():
 			exch2_exch1_lst=exch2_exch1_lst[-PERIORD:]
 		exch1_exch2_threshold= np.percentile(exch1_exch2_lst,80)
 		exch2_exch1_threshold= np.percentile(exch2_exch1_lst,80)
-		logger.info('REPORT RES exch1_buy:{}, exch2_buy:{}'.format(exch1_exch2_threshold,exch2_exch1_threshold))
+		logger.info('REPORT RES 95 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,95),np.percentile(exch2_exch1_lst,95)))
+		logger.info('REPORT RES 90 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,90),np.percentile(exch2_exch1_lst,90)))
+		logger.info('REPORT RES 85 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,85),np.percentile(exch2_exch1_lst,85)))
+		logger.info('REPORT RES 80 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,80),np.percentile(exch2_exch1_lst,80)))
 async def deal_handler():
 	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),sampler(),percentile()],return_when=asyncio.FIRST_COMPLETED,)
 
