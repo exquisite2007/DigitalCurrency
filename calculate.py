@@ -37,13 +37,9 @@ async def trade_handler():
 		(ok_ask_head,ok_ask_head_volume,ok_bid_head,ok_bid_head_volume)=okexUtil.get_orderbook_head()
 		(poloniex_ask_head,poloniex_ask_head_volume,poloniex_bid_head,poloniex_bid_head_volume)=poloniexUtil.get_orderbook_head()
 		
-		(ok_avaliable_buy,ok_buy_one_cost)=okexUtil.get_buy_info(ok_ask_head)
-		(ok_avaliable_sell,ok_sell_one_cost)=okexUtil.get_sell_info(ok_bid_head)
-		(poloniex_availiable_buy,poloniex_buy_one_cost)=poloniexUtil.get_buy_info(poloniex_ask_head)
-		(poloniex_availiable_sell,poloniex_sell_one_cost)=poloniexUtil.get_sell_info(poloniex_bid_head)
 
-		ok_buy_profit=poloniex_bid_head-ok_ask_head -(poloniex_sell_one_cost+ok_buy_one_cost)
-		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(ok_sell_one_cost+poloniex_buy_one_cost)
+		ok_buy_profit=poloniex_bid_head-ok_ask_head -(poloniex_bid_head*0.0025+ok_ask_head*0.002)
+		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(ok_bid_head*0.002+poloniex_ask_head*0.0025)
 		exch1_exch2_max=max(ok_buy_profit,exch1_exch2_max)
 		exch2_exch1_max=max(poloniex_buy_profit,exch2_exch1_max)		
 	except Exception as e:
