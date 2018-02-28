@@ -67,8 +67,8 @@ async def percentile():
 			exch1_exch2_lst=exch1_exch2_lst[-PERIORD:]
 		if len(exch2_exch1_lst) > PERIORD:
 			exch2_exch1_lst=exch2_exch1_lst[-PERIORD:]
-		exch1_exch2_threshold= np.percentile(exch1_exch2_lst,80)
-		exch2_exch1_threshold= np.percentile(exch2_exch1_lst,80)
+		logger.info('REPORT RES 99 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,99),np.percentile(exch2_exch1_lst,99)))
+		logger.info('REPORT RES 98 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,98),np.percentile(exch2_exch1_lst,98)))
 		logger.info('REPORT RES 95 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,95),np.percentile(exch2_exch1_lst,95)))
 		logger.info('REPORT RES 90 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,90),np.percentile(exch2_exch1_lst,90)))
 		logger.info('REPORT RES 85 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,85),np.percentile(exch2_exch1_lst,85)))
