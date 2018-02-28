@@ -60,6 +60,8 @@ async def sampler():
 
 async def percentile():
 	while True:
+		global exch1_exch2_lst
+		global exch2_exch1_lst
 		await asyncio.sleep(REPORT_INTERVAL)
 		if len(exch1_exch2_lst)> PERIORD:
 			exch1_exch2_lst=exch1_exch2_lst[-PERIORD:]
