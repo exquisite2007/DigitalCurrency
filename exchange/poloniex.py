@@ -113,8 +113,8 @@ class poloniexUtil:
 			raise Exception(self.name,'Error in init_wallet')
 
 	async def order_book(self,trade_handler):
-		try:
-			while True:
+		while True:
+			try:
 				async with websockets.connect('wss://api2.poloniex.com/') as websocket:
 					param={'command':'subscribe','channel':self.CURRENT_PAIR}
 					await websocket.send(json.dumps(param))	
@@ -147,9 +147,9 @@ class poloniexUtil:
 									elif float(item[3])>0:
 										self.ORDER_BOOK['bid'][item[2]]=float(item[3])
 						await trade_handler()
-		except Exception as e:
-			self.ORDER_BOOK={}
-			logger.error('poloniex BOOK connect:{}'.format(e))
+			except Exception as e:
+				self.ORDER_BOOK={}
+				logger.error('poloniex BOOK connect:{}'.format(e))
 	def get_orderbook_head(self):
 		if len(self.ORDER_BOOK)>0:
 			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))

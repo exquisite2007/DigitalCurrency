@@ -13,6 +13,7 @@ ch = TimedRotatingFileHandler('deal.log', when='D', interval=1, backupCount=3)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+import sqlite3
 import os
 import sys
 from exchange.poloniex import poloniexUtil
