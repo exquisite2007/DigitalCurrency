@@ -63,16 +63,15 @@ async def percentile():
 		global exch1_exch2_lst
 		global exch2_exch1_lst
 		await asyncio.sleep(REPORT_INTERVAL)
+		logger.debug('percentile length:{},{}'.format(len(exch1_exch2_lst),len(exch2_exch1_lst)))
 		if len(exch1_exch2_lst)> PERIORD:
 			exch1_exch2_lst=exch1_exch2_lst[-PERIORD:]
 		if len(exch2_exch1_lst) > PERIORD:
 			exch2_exch1_lst=exch2_exch1_lst[-PERIORD:]
-		logger.info('REPORT RES 99 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,99),np.percentile(exch2_exch1_lst,99)))
-		logger.info('REPORT RES 98 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,98),np.percentile(exch2_exch1_lst,98)))
-		logger.info('REPORT RES 95 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,95),np.percentile(exch2_exch1_lst,95)))
-		logger.info('REPORT RES 90 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,90),np.percentile(exch2_exch1_lst,90)))
-		logger.info('REPORT RES 85 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,85),np.percentile(exch2_exch1_lst,85)))
-		logger.info('REPORT RES 80 exch1_buy:{}, exch2_buy:{}'.format(np.percentile(exch1_exch2_lst,80),np.percentile(exch2_exch1_lst,80)))
+		rg=[99.9,99.8,99.7,99.6,99.5,99.5,99.4,99.3,99.2,99.1,99,98,97,96,95,90,80]
+		for item in rg:
+			logger.info('REPORT RES {} exch1_buy:{}, exch2_buy:{}'.format(item,np.percentile(exch1_exch2_lst,item),np.percentile(exch2_exch1_lst,item)))
+		
 async def deal_handler():
 	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),sampler(),percentile()],return_when=asyncio.FIRST_COMPLETED,)
 
