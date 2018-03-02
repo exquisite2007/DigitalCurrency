@@ -29,7 +29,7 @@ CREATE_SYSTEM_SQL='CREATE TABLE IF NOT EXISTS `system` ( `id` INTEGER NOT NULL P
 SELECT_SYSTEM_SQL='SELECT * from system'
 UPDATE_SYSTEM_SQL='update system set value=? where key=?'
 INSERT_SYSTEM_SQL='insert into system (key,value) values(?,?)'
-CREATE_TRADE_SQL='CREATE TABLE `trade` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `ts` INTEGER NOT NULL, `per_profit` REAL NOT NULL, `amount` REAL NOT NULL, `type` INTEGER NOT NULL )'
+CREATE_TRADE_SQL='CREATE TABLE IF NOT EXISTS `trade` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `ts` INTEGER NOT NULL, `per_profit` REAL NOT NULL, `amount` REAL NOT NULL, `type` INTEGER NOT NULL )'
 INSERT_TRADE_SQL='insert into trade (ts,per_profit,amount,type)values(?,?,?,?)'
 FINISH_TRADE_LST=[]
 conn = sqlite3.connect('trade.db')
