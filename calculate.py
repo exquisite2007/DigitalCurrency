@@ -28,7 +28,7 @@ exch2_exch1_max=MINIST_VALUE
 exch1_exch2_lst=[]
 exch2_exch1_lst=[]
 SAMPLE_INTERVAL=1
-PERIORD=100
+PERIORD=60*60
 REPORT_INTERVAL=50
 
 
@@ -68,6 +68,7 @@ async def percentile():
 			exch1_exch2_lst=exch1_exch2_lst[-PERIORD:]
 		if len(exch2_exch1_lst) > PERIORD:
 			exch2_exch1_lst=exch2_exch1_lst[-PERIORD:]
+		logger.debug('percentile after length:{},{}'.format(len(exch1_exch2_lst),len(exch2_exch1_lst)))
 		rg=[99.9,99.8,99.7,99.6,99.5,99.5,99.4,99.3,99.2,99.1,99,98,97,96,95,90,80]
 		for item in rg:
 			logger.info('REPORT RES {} exch1_buy:{}, exch2_buy:{}'.format(item,np.percentile(exch1_exch2_lst,item),np.percentile(exch2_exch1_lst,item)))
