@@ -167,7 +167,7 @@ async def change_threshold(request):
 	params = await request.json()
 	if peername[0]=='172.96.18.216':
 		sign=hmac.new('I am really poor'.encode(),digestmod=hashlib.sha256).hexdigest()
-		if 'sign' not in params['sign'] or sign!=params['sign']:
+		if 'sign' not in params or sign!=params['sign']:
 			return web.json_response({'msg':'invalid signature!!!'})
 	
 	ok_buy_thres = params['ok_buy_thres']
