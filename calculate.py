@@ -19,17 +19,17 @@ import os
 import sys
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
-SUPPOR_PAIR='ETC_USDT'
-okexUtil=okexUtil(SUPPOR_PAIR)
-poloniexUtil=poloniexUtil(SUPPOR_PAIR)
+SUPPORT_PAIR='ETC_USDT'
+okexUtil=okexUtil(SUPPORT_PAIR)
+poloniexUtil=poloniexUtil(SUPPORT_PAIR)
 MINIST_VALUE=-999999
 exch1_exch2_max=MINIST_VALUE
 exch2_exch1_max=MINIST_VALUE
 exch1_exch2_lst=[]
 exch2_exch1_lst=[]
 SAMPLE_INTERVAL=1
-PERIORD=3600*4
-REPORT_INTERVAL=1800
+PERIORD=100
+REPORT_INTERVAL=50
 
 
 async def trade_handler():

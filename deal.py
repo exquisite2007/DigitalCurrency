@@ -24,7 +24,12 @@ okexUtil=okexUtil(SUPPOR_PAIR)
 poloniexUtil=poloniexUtil(SUPPOR_PAIR)
 OK_BUY_THRES=0.1
 POLO_BUY_THRES=0.1
-
+CREATE_SYSTEM_SQL='CREATE TABLE IF NOT EXISTS `system` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `key` TEXT NOT NULL, `value` TEXT NOT NULL )'
+CREATE_TRADE_SQL='CREATE TABLE `trade` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `ts` INTEGER NOT NULL, `per_profit` REAL NOT NULL, `amount` REAL NOT NULL, `type` INTEGER NOT NULL )'
+SELECT_SYSTEM_SQL='SELECT * from system'
+UPDATE_SYSTEM_SQL='update system set value=? where key=?'
+INSERT_SYSTEM_SQL='insert into system (key,value) values(?,?)'
+conn = sqlite3.connect('trade.db')
 def initAll():
 	logger.debug('start init all')
 	if 'ok_access_key' in os.environ and 'poloniex_access_key' in os.environ:
@@ -35,6 +40,22 @@ def initAll():
 	else:
 		logger.error('please check you exchange access key exist in your environment')
 		sys.exit()
+	cursor = conn.cursor()
+	cursor.execute(CREATE_SYSTEM_SQL)
+	cursor.execute(CREATE_TRADE_SQL)
+	cursor.execute(SELECT_SYSTEM_SQL)
+	sysMap={}
+	for item in cursor.fetchall():
+		sysMap[item[1]]=item[2]
+	global OK_BUY_THRES
+	if sysMap.has_key('OK_BUY_THRES'):
+		OK_BUY_THRES=float(sysMap['OK_BUY_THRES'])		
+	global POLO_BUY_THRES
+	if sysMap.has_key('POLO_BUY_THRES'):
+		POLO_BUY_THRES=float(sysMap['POLO_BUY_THRES'])
+	logger.info('Finish init all')
+	cursor.close()
+
 trade_lock=False
 async def trade_handler():
 	global trade_lock
@@ -126,6 +147,10 @@ async def change_threshold(request):
 	global POLO_BUY_THRES
 	OK_BUY_THRES=ok_buy_thres
 	POLO_BUY_THRES=poloniex_buy_thres
+	cursor = conn.cursor()
+	cursor.execute(UPDATE_SYSTEM_SQL,[('OK_BUY_THRES',ok_buy_thres),('POLO_BUY_THRES',poloniex_buy_thres)])
+	cursor.connection.commit()
+	cursor.close()
 	logger.info('position changed. okex:{},poloniex:{}'.format(OK_BUY_THRES,POLO_BUY_THRES))
 	return  web.json_response({'msg':'successfully update'})
 app = web.Application()
