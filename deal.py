@@ -171,7 +171,7 @@ async def change_threshold(request):
 	params = await request.json()
 	ok_buy_thres = params['ok_buy_thres']
 	poloniex_buy_thres = params['poloniex_buy_thres']
-	if ok_buy_thres+poloniex_buy_thres <0:
+	if ok_buy_thres+poloniex_buy_thres <0.02:
 		return  web.json_response({'msg':'failed, not in range'})
 	if abs(ok_buy_thres)>0.5 or abs(poloniex_buy_thres)>0.5:
 		return  web.json_response({'msg':'failed, not in range1'})
