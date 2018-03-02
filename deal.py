@@ -5,6 +5,8 @@ import websockets
 import json
 import requests
 from aiohttp import web
+import hmac
+import hashlib
 import logging
 from  logging.handlers import TimedRotatingFileHandler
 logger = logging.getLogger("deal")
@@ -158,8 +160,14 @@ async def get_threshold(request):
 	return web.json_response(res)
 async def change_threshold(request):
 	peername = request.transport.get_extra_info('peername')
-	if peername is not None:
-		host, port = peername
+	if peername is None:
+		return web.json_response({'msg':'unknown source request'})
+	if peername[0]!='127.0.0.1' or peername[0] !='172.96.18.216':
+		return  web.json_response({'msg':'you are forbidden!!!'})
+	if peername[0]=='172.96.18.216':
+		sign=hmac.new('I am really poor'.encode(),digestmod=hashlib.sha256).hexdigest()
+		if sign!=params['sign']:
+			return web.json_response({'msg':'invalid signature!!!'})
 	params = await request.json()
 	ok_buy_thres = params['ok_buy_thres']
 	poloniex_buy_thres = params['poloniex_buy_thres']
@@ -181,5 +189,5 @@ app = web.Application()
 app.router.add_get('/wallet', get_wallet)
 app.router.add_get('/threshold', get_threshold)
 app.router.add_post('/threshold', change_threshold)
-app.on_startup.append(backgroud)
-web.run_app(app,host='127.0.0.1')
+# app.on_startup.append(backgroud)
+web.run_app(app,host='0.0.0.0',port=20183)
