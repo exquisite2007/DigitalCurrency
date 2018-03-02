@@ -60,7 +60,7 @@ class poloniexUtil:
 		res = await loop.run_in_executor(None, self.handleRequest,'buy',params)
 		logger.debug('[poloniex] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
 		if res is not None:
-			return res
+			return res['orderNumber']
 		else:
 			raise Exception(self.name,'Error in buy:{}|{}'.format(rate,amount))
 	async def sell(self,rate,amount):
@@ -71,7 +71,7 @@ class poloniexUtil:
 		res = await loop.run_in_executor(None, self.handleRequest,'sell',params)
 		logger.info('[poloniex] sell request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		if res is not None:
-			return res
+			return res['orderNumber']
 		else:
 			raise Exception(self.name,'Error in sell:{}|{}'.format(rate,amount))
 

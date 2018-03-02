@@ -18,6 +18,7 @@ import os
 import sys
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
+import time
 SUPPOR_PAIR='ETC_USDT'
 MAX_TRADE_SIZE=3
 okexUtil=okexUtil(SUPPOR_PAIR)
@@ -25,10 +26,12 @@ poloniexUtil=poloniexUtil(SUPPOR_PAIR)
 OK_BUY_THRES=0.1
 POLO_BUY_THRES=0.1
 CREATE_SYSTEM_SQL='CREATE TABLE IF NOT EXISTS `system` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `key` TEXT NOT NULL, `value` TEXT NOT NULL )'
-CREATE_TRADE_SQL='CREATE TABLE `trade` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `ts` INTEGER NOT NULL, `per_profit` REAL NOT NULL, `amount` REAL NOT NULL, `type` INTEGER NOT NULL )'
 SELECT_SYSTEM_SQL='SELECT * from system'
 UPDATE_SYSTEM_SQL='update system set value=? where key=?'
 INSERT_SYSTEM_SQL='insert into system (key,value) values(?,?)'
+CREATE_TRADE_SQL='CREATE TABLE `trade` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `ts` INTEGER NOT NULL, `per_profit` REAL NOT NULL, `amount` REAL NOT NULL, `type` INTEGER NOT NULL )'
+INSERT_TRADE_SQL='insert into trade (ts,per_profit,amount,type)values(?,?,?,?)'
+FINISH_TRADE_LST=[]
 conn = sqlite3.connect('trade.db')
 def initAll():
 	logger.debug('start init all')
@@ -61,6 +64,7 @@ async def trade_handler():
 	global trade_lock
 	global OK_BUY_THRES
 	global POLO_BUY_THRES
+	global FINISH_TRADE_LST
 	#at a time ,only one trade can be processed
 	#at same time, not block other order book update
 	if trade_lock:
@@ -76,6 +80,7 @@ async def trade_handler():
 		(poloniex_availiable_sell,poloniex_sell_one_cost)=poloniexUtil.get_sell_info(poloniex_bid_head)
 
 		ok_buy_profit=poloniex_bid_head-ok_ask_head -(poloniex_sell_one_cost+ok_buy_one_cost)
+		ts=int(time.time())
 		if ok_buy_profit>OK_BUY_THRES:
 			min_volume=min([poloniex_bid_head_volume,ok_ask_head_volume,ok_avaliable_buy,poloniex_availiable_sell,MAX_TRADE_SIZE])
 			if min_volume< 0.01 or min_volume*poloniex_bid_head<1:
@@ -84,6 +89,7 @@ async def trade_handler():
 				trade_lock=True
 				results = await asyncio.gather(okexUtil.buy(ok_ask_head,min_volume),poloniexUtil.sell(poloniex_bid_head,min_volume),)
 				logger.info('[trade]Finish okex buy:{!r}. profit:{}'.format(results,ok_buy_profit))
+				FINISH_TRADE_LST.append((ts,ok_buy_profit,min_volume,0))
 				trade_lock=False
 		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(ok_sell_one_cost+poloniex_buy_one_cost)
 		if poloniex_buy_profit>POLO_BUY_THRES:
@@ -93,6 +99,7 @@ async def trade_handler():
 			else:
 				trade_lock=True
 				results = await asyncio.gather(okexUtil.sell(ok_bid_head,min_volume),poloniexUtil.buy(poloniex_ask_head,min_volume),)
+				FINISH_TRADE_LST.append((ts,poloniex_buy_profit,min_volume,1))
 				trade_lock=False
 				logger.info('[trade]Finish poloniex buy:{!r}. profit:{}'.format(results,poloniex_buy_profit))
 		logger.debug('buy_profit:{}:{}|{}:{}|{}|{}:{}|{}:{}|{}'.format(
@@ -111,13 +118,21 @@ async def refreshWallet():
 	while True:
 		await asyncio.wait([poloniexUtil.init_wallet(),okexUtil.init_wallet()],return_when=asyncio.FIRST_COMPLETED,)
 		await asyncio.sleep(300)
-async def handle_unfinish_order():
+async def order_check():
+	global FINISH_TRADE_LST
 	while True:
 		await asyncio.sleep(60)
 		await asyncio.wait([poloniexUtil.unfinish_order_handler(),okexUtil.unfinish_order_handler()],return_when=asyncio.FIRST_COMPLETED,)
+		if len(FINISH_TRADE_LST)>0:
+			cursor = conn.cursor()
+			cursor.executemany(INSERT_TRADE_SQL,FINISH_TRADE_LST)
+			cursor.connection.commit()
+			cursor.close()
+			FINISH_TRADE_LST=[]
+			logger.info('FINISH BACKUP trade item.')
 async def deal_handler():
 	initAll()
-	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),refreshWallet(),handle_unfinish_order()],return_when=asyncio.FIRST_COMPLETED,)
+	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),refreshWallet(),order_check()],return_when=asyncio.FIRST_COMPLETED,)
 async def backgroud(app):
 	app.loop.create_task(deal_handler())
 

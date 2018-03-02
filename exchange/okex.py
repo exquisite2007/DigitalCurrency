@@ -55,7 +55,7 @@ class okexUtil:
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
 		logger.debug('[OKEX] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
-		return res
+		return res['order_id']
 
 
 		
@@ -66,7 +66,7 @@ class okexUtil:
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
 		logger.debug('[OKEX] sell request {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
-		return res
+		return res['order_id']
 	async def unfinish_order(self):
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{'symbol':self.CURRENT_PAIR,'order_id':-1})

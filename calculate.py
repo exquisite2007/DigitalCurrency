@@ -4,7 +4,6 @@ import asyncio
 import websockets
 import json
 import requests
-from aiohttp import web
 import logging
 from  logging.handlers import TimedRotatingFileHandler
 import time
@@ -28,10 +27,12 @@ exch2_exch1_max=MINIST_VALUE
 exch1_exch2_lst=[]
 exch2_exch1_lst=[]
 SAMPLE_INTERVAL=1
-PERIORD=60*60
-REPORT_INTERVAL=50
+PERIORD=3*60*60
+REPORT_INTERVAL=60
 
-
+if 'pair' in os.environ:
+	SUPPORT_PAIR=os.environ['pair']
+	logger.info('BEGIN monitor {}'.format(SUPPORT_PAIR))
 async def trade_handler():
 	try:
 		global exch1_exch2_max
