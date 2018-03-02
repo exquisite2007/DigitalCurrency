@@ -162,11 +162,11 @@ async def change_threshold(request):
 	peername = request.transport.get_extra_info('peername')
 	if peername is None:
 		return web.json_response({'msg':'unknown source request'})
-	if not (peername[0]=='127.0.0.1' or peername[0] =='172.96.18.216'):
+	if not (peername[0]=='45.62.107.169' or peername[0] =='172.96.18.216'):
 		return  web.json_response({'msg':'you are forbidden!!!'})
 	if peername[0]=='172.96.18.216':
 		sign=hmac.new('I am really poor'.encode(),digestmod=hashlib.sha256).hexdigest()
-		if sign!=params['sign']:
+		if 'sign' not in params['sign'] or sign!=params['sign']:
 			return web.json_response({'msg':'invalid signature!!!'})
 	params = await request.json()
 	ok_buy_thres = params['ok_buy_thres']
