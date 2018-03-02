@@ -51,11 +51,20 @@ def initAll():
 	for item in cursor.fetchall():
 		sysMap[item[1]]=item[2]
 	global OK_BUY_THRES
+	sysLst=[]
 	if 'OK_BUY_THRES' in sysMap:
-		OK_BUY_THRES=float(sysMap['OK_BUY_THRES'])		
+		OK_BUY_THRES=float(sysMap['OK_BUY_THRES'])
+	else:
+		sysLst.append(('OK_BUY_THRES',str(OK_BUY_THRES)))
 	global POLO_BUY_THRES
 	if 'POLO_BUY_THRES' in sysMap:
 		POLO_BUY_THRES=float(sysMap['POLO_BUY_THRES'])
+	else:
+		sysLst.append(('POLO_BUY_THRES',str(POLO_BUY_THRES)))
+	if len(sysLst)>0:
+		cursor.executemany(INSERT_SYSTEM_SQL,sysLst)
+		cursor.connection.commit()
+
 	logger.info('Finish init all')
 	cursor.close()
 
@@ -163,7 +172,7 @@ async def change_threshold(request):
 	OK_BUY_THRES=ok_buy_thres
 	POLO_BUY_THRES=poloniex_buy_thres
 	cursor = conn.cursor()
-	cursor.execute(UPDATE_SYSTEM_SQL,[('OK_BUY_THRES',ok_buy_thres),('POLO_BUY_THRES',poloniex_buy_thres)])
+	cursor.executemany(UPDATE_SYSTEM_SQL,[(ok_buy_thres,'OK_BUY_THRES'),(poloniex_buy_thres,'POLO_BUY_THRES')])
 	cursor.connection.commit()
 	cursor.close()
 	logger.info('position changed. okex:{},poloniex:{}'.format(OK_BUY_THRES,POLO_BUY_THRES))
