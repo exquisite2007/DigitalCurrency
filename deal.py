@@ -162,7 +162,7 @@ async def change_threshold(request):
 	peername = request.transport.get_extra_info('peername')
 	if peername is None:
 		return web.json_response({'msg':'unknown source request'})
-	if peername[0]!='127.0.0.1' or peername[0] !='172.96.18.216':
+	if not (peername[0]=='127.0.0.1' or peername[0] =='172.96.18.216'):
 		return  web.json_response({'msg':'you are forbidden!!!'})
 	if peername[0]=='172.96.18.216':
 		sign=hmac.new('I am really poor'.encode(),digestmod=hashlib.sha256).hexdigest()
