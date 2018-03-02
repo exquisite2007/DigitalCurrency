@@ -51,10 +51,10 @@ def initAll():
 	for item in cursor.fetchall():
 		sysMap[item[1]]=item[2]
 	global OK_BUY_THRES
-	if sysMap.has_key('OK_BUY_THRES'):
+	if 'OK_BUY_THRES' in sysMap:
 		OK_BUY_THRES=float(sysMap['OK_BUY_THRES'])		
 	global POLO_BUY_THRES
-	if sysMap.has_key('POLO_BUY_THRES'):
+	if 'POLO_BUY_THRES' in sysMap:
 		POLO_BUY_THRES=float(sysMap['POLO_BUY_THRES'])
 	logger.info('Finish init all')
 	cursor.close()
