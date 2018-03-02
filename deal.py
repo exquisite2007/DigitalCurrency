@@ -164,11 +164,12 @@ async def change_threshold(request):
 		return web.json_response({'msg':'unknown source request'})
 	if not (peername[0]=='45.62.107.169' or peername[0] =='172.96.18.216'):
 		return  web.json_response({'msg':'you are forbidden!!!'})
+	params = await request.json()
 	if peername[0]=='172.96.18.216':
 		sign=hmac.new('I am really poor'.encode(),digestmod=hashlib.sha256).hexdigest()
 		if 'sign' not in params['sign'] or sign!=params['sign']:
 			return web.json_response({'msg':'invalid signature!!!'})
-	params = await request.json()
+	
 	ok_buy_thres = params['ok_buy_thres']
 	poloniex_buy_thres = params['poloniex_buy_thres']
 	if ok_buy_thres+poloniex_buy_thres <0.02:
