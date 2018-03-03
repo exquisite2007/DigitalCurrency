@@ -127,7 +127,6 @@ class okexUtil:
 							bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
 							bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
 							bid_head_all=bid_head+':'+str(bid_head_volume)
-							logger.debug('okex {},{}'.format(ask_head_all,bid_head_all))
 							if ask_head_all != self.ask_head_all or bid_head_all != self.bid_head_all:
 								self.ask_head_all=ask_head_all
 								self.bid_head_all=bid_head_all
