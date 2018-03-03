@@ -121,17 +121,17 @@ class okexUtil:
 								bid_map[item[0]]=float(item[1])
 							self.ORDER_BOOK['bid']=bid_map
 
-						ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
-						ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
-						ask_head_all=ask_head+':'+str(ask_head_volume)
-						bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
-						bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
-						bid_head_all=bid_head+':'+str(bid_head_volume)
-						logger.debug('okex {},{}'.format(ask_head_all,bid_head_all))
-						if ask_head_all != self.ask_head_all or bid_head_all != self.bid_head_all:
-							self.ask_head_all=ask_head_all
-							self.bid_head_all=bid_head_all
-							await trade_handler()
+							ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
+							ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
+							ask_head_all=ask_head+':'+str(ask_head_volume)
+							bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
+							bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
+							bid_head_all=bid_head+':'+str(bid_head_volume)
+							logger.debug('okex {},{}'.format(ask_head_all,bid_head_all))
+							if ask_head_all != self.ask_head_all or bid_head_all != self.bid_head_all:
+								self.ask_head_all=ask_head_all
+								self.bid_head_all=bid_head_all
+								await trade_handler()
 			except Exception as le:
 				logger.error('OKEX BOOK connect:{}'.format(le))
 				self.ORDER_BOOK={}
