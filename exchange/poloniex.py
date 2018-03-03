@@ -26,6 +26,8 @@ class poloniexUtil:
 		self.TAKER_FEE=0.0025
 		# 补偿，买一个币，只能得到（1-self.TAKER_FEE）个币，为了保证两边币的数量一致，增加一个补偿量
 		self.BUY_PATCH=(1+self.TAKER_FEE)*self.TAKER_FEE
+		self.ask_head_all=None
+		self.bid_head_all=None
 	access_key=None
 	secret_key=None
 
@@ -146,22 +148,28 @@ class poloniexUtil:
 										del self.ORDER_BOOK['bid'][item[2]]
 									elif float(item[3])>0:
 										self.ORDER_BOOK['bid'][item[2]]=float(item[3])
-						await trade_handler()
+						ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
+						ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
+						bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
+						bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
+						ask_head_all=ask_head+':'+str(ask_head_volume)
+						bid_head_all=bid_head+':'+str(bid_head_volume)
+						if ask_head_all != self.ask_head_all or bid_head_all != self.bid_head_all:
+							self.ask_head_all=ask_head_all
+							self.bid_head_all=bid_head_all
+							await trade_handler()
 			except Exception as e:
 				self.ORDER_BOOK={}
+				self.ask_head_all=None
+				self.bid_head_all=None
 				logger.error('poloniex BOOK connect:{}'.format(e))
 	def get_orderbook_head(self):
-		if len(self.ORDER_BOOK)>0:
-			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
-			ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
-			ask_head=float(ask_head)
-			bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
-			bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
-			bid_head=float(bid_head)
-			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
+		if self.ask_head_all is None or self.bid_head_all is None:
+			raise Exception(self.name,'Error in get_orderbook_head')
 		else:
-			return None
-
+			ask_heads=self.ask_head_all.split(':')
+			bid_heads=self.bid_head_all.split(':')
+			return (float(ask_heads[0]),float(ask_heads[1]),float(bid_heads[0]),float(bid_heads[1]))
 
 	def get_sell_info(self,rate):
 		if len(self.WALLET)<=0:
