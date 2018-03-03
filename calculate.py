@@ -37,7 +37,7 @@ PERIORD=3*60*60
 REPORT_INTERVAL=60
 
 ENABLE_TRADE_MODIFY=0
-if 'enable_trade_modify' in os.environ['enable_trade_modify']:
+if 'enable_trade_modify' in os.environ:
 	ENABLE_TRADE_MODIFY=1
 
 async def trade_handler():
