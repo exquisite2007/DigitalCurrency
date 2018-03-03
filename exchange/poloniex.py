@@ -148,12 +148,13 @@ class poloniexUtil:
 										del self.ORDER_BOOK['bid'][item[2]]
 									elif float(item[3])>0:
 										self.ORDER_BOOK['bid'][item[2]]=float(item[3])
-						# ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
-						# ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
-						# bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
-						# bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
-						# ask_head_all=ask_head+':'+str(ask_head_volume)
-						# bid_head_all=bid_head+':'+str(bid_head_volume)
+						ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
+						ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
+						bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
+						bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
+						ask_head_all=ask_head+':'+str(ask_head_volume)
+						bid_head_all=bid_head+':'+str(bid_head_volume)
+						logger.debug('poloniex {},{}'.format(ask_head_all,bid_head_all))
 						# if ask_head_all != self.ask_head_all or bid_head_all != self.bid_head_all:
 						# 	self.ask_head_all=ask_head_all
 						# 	self.bid_head_all=bid_head_all
