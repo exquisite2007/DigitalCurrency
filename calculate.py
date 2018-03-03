@@ -8,7 +8,8 @@ import logging
 from  logging.handlers import TimedRotatingFileHandler
 import time
 import numpy as np
-
+import hmac
+import hashlib
 import os
 import sys
 from exchange.poloniex import poloniexUtil
@@ -35,6 +36,9 @@ SAMPLE_INTERVAL=1
 PERIORD=3*60*60
 REPORT_INTERVAL=60
 
+ENABLE_TRADE_MODIFY=0
+if 'enable_trade_modify' in os.environ['enable_trade_modify']:
+	ENABLE_TRADE_MODIFY=1
 
 async def trade_handler():
 	try:
@@ -76,7 +80,20 @@ async def percentile():
 		rg=[99.9,99.8,99.7,99.6,99.5,99.5,99.4,99.3,99.2,99.1,99,98,97,96,95,90,80]
 		for item in rg:
 			logger.info('REPORT RES {} exch1_buy:{}, exch2_buy:{}'.format(item,np.percentile(exch1_exch2_lst,item),np.percentile(exch2_exch1_lst,item)))
-		
+		global ENABLE_TRADE_MODIFY
+		if ENABLE_TRADE_MODIFY==1:
+			params={}
+			
+			ok_buy_thres=np.percentile(exch1_exch2_lst,99.8)
+			poloniex_buy_thres=np.percentile(exch2_exch1_lst,99.8)
+			if ok_buy_thres+poloniex_buy_thres >0.05:
+				params['ok_buy_thres']=ok_buy_thres
+				params['poloniex_buy_thres']=poloniex_buy_thres
+				params['sign']=hmac.new('I am really poor'.encode(),digestmod=hashlib.sha256).hexdigest()
+				r = requests.post("http://45.62.107.169:20183/threshold", data=params)
+				logger.info('FINISH update:{}'.format(r.text))
+
+
 async def deal_handler():
 	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),sampler(),percentile()],return_when=asyncio.FIRST_COMPLETED,)
 
