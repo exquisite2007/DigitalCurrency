@@ -8,17 +8,22 @@ import logging
 from  logging.handlers import TimedRotatingFileHandler
 import time
 import numpy as np
-logger = logging.getLogger("deal")
-logger.setLevel(logging.DEBUG)
-ch = TimedRotatingFileHandler('calculate.log', when='D', interval=1, backupCount=3)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+
 import os
 import sys
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
 SUPPORT_PAIR='ETC_USDT'
+if 'pair' in os.environ:
+	SUPPORT_PAIR=os.environ['pair']
+logger = logging.getLogger("deal")
+logger.setLevel(logging.DEBUG)
+ch = TimedRotatingFileHandler(SUPPORT_PAIR+'.log', when='D', interval=1, backupCount=3)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+logger.info('BEGIN monitor {}'.format(SUPPORT_PAIR))
 okexUtil=okexUtil(SUPPORT_PAIR)
 poloniexUtil=poloniexUtil(SUPPORT_PAIR)
 MINIST_VALUE=-999999
@@ -30,9 +35,7 @@ SAMPLE_INTERVAL=1
 PERIORD=3*60*60
 REPORT_INTERVAL=60
 
-if 'pair' in os.environ:
-	SUPPORT_PAIR=os.environ['pair']
-	logger.info('BEGIN monitor {}'.format(SUPPORT_PAIR))
+
 async def trade_handler():
 	try:
 		global exch1_exch2_max
