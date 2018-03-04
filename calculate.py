@@ -83,12 +83,11 @@ async def percentile():
 		for item in rg:
 			logger.info('REPORT RES {} exch1_buy:{}, exch2_buy:{}'.format(item,np.percentile(exch1_exch2_lst,item),np.percentile(exch2_exch1_lst,item)))
 		global ENABLE_TRADE_MODIFY
-		if ENABLE_TRADE_MODIFY==1:
+		if ENABLE_TRADE_MODIFY==1 and enable:
 			params={}
-			
 			ok_buy_thres=np.percentile(exch1_exch2_lst,99.8)
 			poloniex_buy_thres=np.percentile(exch2_exch1_lst,99.8)
-			if ok_buy_thres+poloniex_buy_thres >0.05 and enable:
+			if ok_buy_thres+poloniex_buy_thres >0.05:
 				params['ok_buy_thres']=ok_buy_thres
 				params['poloniex_buy_thres']=poloniex_buy_thres
 				params['rand']=str(random.randint(1000000,2000000))
