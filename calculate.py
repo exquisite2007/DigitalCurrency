@@ -12,6 +12,7 @@ import hmac
 import hashlib
 import os
 import sys
+import random
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
 SUPPORT_PAIR='ETC_USDT'
@@ -40,7 +41,6 @@ ENABLE_TRADE_MODIFY=0
 if 'enable_trade_modify' in os.environ:
 	ENABLE_TRADE_MODIFY=1
 
-logger.info('get enable value in environment:{},{!r}'.format(ENABLE_TRADE_MODIFY,os.environ))
 async def trade_handler():
 	try:
 		global exch1_exch2_max
@@ -73,6 +73,7 @@ async def percentile():
 		global exch2_exch1_lst
 		await asyncio.sleep(REPORT_INTERVAL)
 		logger.debug('percentile length:{},{}'.format(len(exch1_exch2_lst),len(exch2_exch1_lst)))
+		enable=len(exch1_exch2_lst)>PERIORD
 		if len(exch1_exch2_lst)> PERIORD:
 			exch1_exch2_lst=exch1_exch2_lst[-PERIORD:]
 		if len(exch2_exch1_lst) > PERIORD:
@@ -87,10 +88,12 @@ async def percentile():
 			
 			ok_buy_thres=np.percentile(exch1_exch2_lst,99.8)
 			poloniex_buy_thres=np.percentile(exch2_exch1_lst,99.8)
-			if ok_buy_thres+poloniex_buy_thres >0.05:
+			if ok_buy_thres+poloniex_buy_thres >0.05 and enable:
 				params['ok_buy_thres']=ok_buy_thres
 				params['poloniex_buy_thres']=poloniex_buy_thres
-				params['sign']=hmac.new('I am really poor'.encode(),digestmod=hashlib.sha256).hexdigest()
+				params['rand']=str(random.randint(1000000,2000000))
+				randStr='I am really poor'+params['rand']
+				params['sign']=hmac.new(randStr.encode(),digestmod=hashlib.sha256).hexdigest()
 				r = requests.post("http://45.62.107.169:20183/threshold", data=params)
 				logger.info('FINISH update:{}'.format(r.text))
 

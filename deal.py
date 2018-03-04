@@ -7,6 +7,7 @@ import requests
 from aiohttp import web
 import hmac
 import hashlib
+import random
 import logging
 from  logging.handlers import TimedRotatingFileHandler
 logger = logging.getLogger("deal")
@@ -172,17 +173,19 @@ async def change_threshold(request):
 	peername = request.transport.get_extra_info('peername')
 	if peername is None:
 		return web.json_response({'msg':'unknown source request'})
-	if not (peername[0]=='45.62.107.169' or peername[0] =='172.96.18.216'):
+	if not (peername[0]=='45.62.107.169' or peername[0] =='172.96.18.216'or peername[0] == '127.0.0.1') :
 		return  web.json_response({'msg':'you are forbidden!!!'})
 	params = await request.json()
-	if peername[0]=='172.96.18.216':
-		sign=hmac.new('I am really poor'.encode(),digestmod=hashlib.sha256).hexdigest()
+	if peername[0]=='172.96.18.216' or peername[0]=='127.0.0.1':
+		print(params)
+		randStr='I am really poor'+params['rand']
+		sign=hmac.new(randStr.encode(),digestmod=hashlib.sha256).hexdigest()
 		if 'sign' not in params or sign!=params['sign']:
 			return web.json_response({'msg':'invalid signature!!!'})
 	
 	ok_buy_thres = params['ok_buy_thres']
 	poloniex_buy_thres = params['poloniex_buy_thres']
-	if ok_buy_thres+poloniex_buy_thres <0.02:
+	if ok_buy_thres+poloniex_buy_thres <0.04:
 		return  web.json_response({'msg':'failed, not in range'})
 	if abs(ok_buy_thres)>0.5 or abs(poloniex_buy_thres)>0.5:
 		return  web.json_response({'msg':'failed, not in range1'})
