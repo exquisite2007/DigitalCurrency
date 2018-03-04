@@ -40,6 +40,7 @@ ENABLE_TRADE_MODIFY=0
 if 'enable_trade_modify' in os.environ:
 	ENABLE_TRADE_MODIFY=1
 
+logger.info('get enable value in environment:{},{!r}'.format(ENABLE_TRADE_MODIFY,os.environ))
 async def trade_handler():
 	try:
 		global exch1_exch2_max

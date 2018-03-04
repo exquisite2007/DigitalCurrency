@@ -158,6 +158,16 @@ async def get_threshold(request):
 	res['OK_BUY_THRES'] = OK_BUY_THRES
 	res['POLO_BUY_THRES'] = POLO_BUY_THRES
 	return web.json_response(res)
+async def get_trade_info(request):
+	cursor = conn.cursor()
+	ts=int(time.time())-86400
+	res={}
+	cursor.execute('select count(1),sum(per_profit*amount) from trade where ts>?',(ts,))
+	db_res= cursor.fetchone()
+	res['count']=db_res[0]
+	res['sum'] = db_res[1]
+	cursor.close()
+	return web.json_response(res)
 async def change_threshold(request):
 	peername = request.transport.get_extra_info('peername')
 	if peername is None:
@@ -188,6 +198,7 @@ async def change_threshold(request):
 	return  web.json_response({'msg':'successfully update'})
 app = web.Application()
 app.router.add_get('/wallet', get_wallet)
+app.router.add_get('/trade', get_trade_info)
 app.router.add_get('/threshold', get_threshold)
 app.router.add_post('/threshold', change_threshold)
 app.on_startup.append(backgroud)
