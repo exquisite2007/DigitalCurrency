@@ -16,6 +16,7 @@ import random
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
 from datetime import datetime
+import sqlite3
 SUPPORT_PAIR='ETC_USDT'
 if 'pair' in os.environ:
 	SUPPORT_PAIR=os.environ['pair']
