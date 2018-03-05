@@ -18,7 +18,7 @@ BOOK_LIMIT=10
 class poloniexUtil:
 	def __init__(self,pair):
 		self.name='poloniex'
-		self.PAIR_MAP={'BTC_ETH':'BTC_ETH','BTC_LTC':'BTC_LTC','BTC_USDT':'USDT_BTC','ETC_USDT':'USDT_ETC'}
+		self.PAIR_MAP={'BTC_ETH':'BTC_ETH','BTC_LTC':'BTC_LTC','BTC_USDT':'USDT_BTC','ETC_USDT':'USDT_ETC','LTC_USDT':'USDT_LTC'}
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=pair.split('_')
 		self.WALLET={}

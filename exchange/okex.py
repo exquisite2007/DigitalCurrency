@@ -14,7 +14,7 @@ logger = logging.getLogger("deal")
 class okexUtil:
 	def __init__(self,pair):
 		self.name='OKEX'
-		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt'}
+		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt','LTC_USDT':'ltc_usdt'}
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=self.CURRENT_PAIR.split('_')
 		self.WALLET={}
