@@ -15,6 +15,7 @@ import sys
 import random
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
+from datetime import datetime
 SUPPORT_PAIR='ETC_USDT'
 if 'pair' in os.environ:
 	SUPPORT_PAIR=os.environ['pair']
@@ -36,6 +37,8 @@ exch2_exch1_lst=[]
 SAMPLE_INTERVAL=1
 PERIORD=3*60*60
 REPORT_INTERVAL=60
+INSERT_SQL='insert into  bookOrder (diversion,timestamp,exchange,type) values(?,?,?,?)'
+CREATE_SQL='CREATE TABLE IF NOT EXISTS bookOrder (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,diversion real,timestamp INTEGER,exchange text,type INTEGER)'
 
 ENABLE_TRADE_MODIFY=0
 if 'enable_trade_modify' in os.environ:
@@ -59,11 +62,23 @@ async def sampler():
 	global exch1_exch2_max
 	global exch2_exch1_max
 	global MINIST_VALUE
+	global SUPPORT_PAIR
 	while True:
-
 		await asyncio.sleep(SAMPLE_INTERVAL)
 		exch1_exch2_lst.append(exch1_exch2_max)
 		exch2_exch1_lst.append(exch2_exch1_max)
+		
+		dbFile = 'orderbook_'+SUPPORT_PAIR+'_'+datetime.now().strftime("%Y-%m-%d")+'.db'
+		conn = sqlite3.connect(dbFile)
+		cursor = conn.cursor()
+		cursor.execute(CREATE_SQL)		
+		lst=[]
+		ts= int(time.time())
+		lst.append((exch1_exch2_max,ts,'ok_polo',0))
+		lst.append((exch2_exch1_max,ts,'ok_polo',1))
+		cursor.executemany(INSERT_SQL,lst)
+		cursor.connection.commit()
+		conn.close()
 		exch1_exch2_max=MINIST_VALUE
 		exch2_exch1_max=MINIST_VALUE
 
@@ -85,8 +100,8 @@ async def percentile():
 		global ENABLE_TRADE_MODIFY
 		if ENABLE_TRADE_MODIFY==1 and enable:
 			params={}
-			ok_buy_thres=np.percentile(exch1_exch2_lst,99.8)
-			poloniex_buy_thres=np.percentile(exch2_exch1_lst,99.8)
+			ok_buy_thres=np.percentile(exch1_exch2_lst,99.9)
+			poloniex_buy_thres=np.percentile(exch2_exch1_lst,99.9)
 			if ok_buy_thres+poloniex_buy_thres >0.05:
 				params['ok_buy_thres']=ok_buy_thres
 				params['poloniex_buy_thres']=poloniex_buy_thres
