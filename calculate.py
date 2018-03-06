@@ -109,7 +109,7 @@ async def percentile():
 				params['rand']=str(random.randint(1000000,2000000))
 				randStr='I am really poor'+params['rand']
 				params['sign']=hmac.new(randStr.encode(),digestmod=hashlib.sha256).hexdigest()
-				r = requests.post("http://45.62.107.169:20183/threshold", data=params)
+				r = requests.post("http://45.62.107.169:20183/threshold", data=json.dumps(params))
 				logger.info('FINISH update:{}'.format(r.text))
 
 

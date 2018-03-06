@@ -25,6 +25,8 @@ class bitfinexUtil:
 		self.WALLET={}
 		self.ORDER_BOOK={}
 		self.TAKER_FEE=0.002
+		self.ask_head_all=None
+		self.bid_head_all=None
 	access_key=None
 	secret_key=None
 	async def order_book(self,trade_handler):
@@ -57,24 +59,28 @@ class bitfinexUtil:
 									del self.ORDER_BOOK['ask'][data[0]]
 								else:
 									self.ORDER_BOOK['ask'][data[0]]=-data[2]
-							
-						await trade_handler()
+						ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
+						ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
+						bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
+						bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
+						ask_head_all=ask_head+':'+str(ask_head_volume)
+						bid_head_all=bid_head+':'+str(bid_head_volume)
+						if ask_head_all != self.ask_head_all or bid_head_all != self.bid_head_all:
+							self.ask_head_all=ask_head_all
+							self.bid_head_all=bid_head_all
+							await trade_handler()
 				except Exception as e:
 					self.ORDER_BOOK={}
 					logger.error('ERROR happen in bitfinex connection:{}'.format(e))
 					websocket.close()
 	def get_orderbook_head(self):
-		if len(self.ORDER_BOOK)>0:
-			ask_head=min(self.ORDER_BOOK['ask'],key=lambda subItem:float(subItem))
-			ask_head_volume=self.ORDER_BOOK['ask'][ask_head]
-			ask_head=float(ask_head)
-			bid_head=max(self.ORDER_BOOK['bid'],key=lambda subItem:float(subItem))
-			bid_head_volume=self.ORDER_BOOK['bid'][bid_head]
-			bid_head=float(bid_head)
-			return (ask_head,ask_head_volume,bid_head,bid_head_volume)
+		if self.ask_head_all is None or self.bid_head_all is None:
+			raise Exception(self.name,'Error in get_orderbook_head')
 		else:
-			return None
-util = bitfinexUtil('ETC_USDT')
+			ask_heads=self.ask_head_all.split(':')
+			bid_heads=self.bid_head_all.split(':')
+			return (float(ask_heads[0]),float(ask_heads[1]),float(bid_heads[0]),float(bid_heads[1]))
+
 async def test():
 	print('nothing here:{}'.format(util.get_orderbook_head()))
 def main(argv=None):
@@ -85,7 +91,7 @@ def main(argv=None):
 	parser.add_option("-p", "--pair", dest="pair", help="pair")
 	parser.set_defaults(mode=0,pair='ETC_USDT')
 	
-
+	util = bitfinexUtil('ETC_USDT')
 	
 	# if 'bitfinex_access_key' not in os.environ:
 	# 	return
