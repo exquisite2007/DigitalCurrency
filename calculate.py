@@ -66,6 +66,7 @@ async def sampler():
 	global SUPPORT_PAIR
 	while True:
 		await asyncio.sleep(SAMPLE_INTERVAL)
+		logger.info('sample record {},{}'.format(exch1_exch2_max,exch2_exch1_max))
 		exch1_exch2_lst.append(exch1_exch2_max)
 		exch2_exch1_lst.append(exch2_exch1_max)
 		
