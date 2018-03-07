@@ -34,7 +34,7 @@ UPDATE_SYSTEM_SQL='update system set value=? where key=?'
 INSERT_SYSTEM_SQL='insert into system (key,value) values(?,?)'
 CREATE_TRADE_SQL='CREATE TABLE IF NOT EXISTS `trade` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `ts` INTEGER NOT NULL, `per_profit` REAL NOT NULL, `amount` REAL NOT NULL, `type` INTEGER NOT NULL )'
 INSERT_TRADE_SQL='insert into trade (ts,per_profit,amount,type)values(?,?,?,?)'
-HEALTH_CHECK_INTERVAL=60*2
+HEALTH_CHECK_INTERVAL=60*4
 FINISH_TRADE_LST=[]
 conn = sqlite3.connect('trade.db')
 def initAll():
