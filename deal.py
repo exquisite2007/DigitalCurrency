@@ -34,6 +34,7 @@ UPDATE_SYSTEM_SQL='update system set value=? where key=?'
 INSERT_SYSTEM_SQL='insert into system (key,value) values(?,?)'
 CREATE_TRADE_SQL='CREATE TABLE IF NOT EXISTS `trade` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `ts` INTEGER NOT NULL, `per_profit` REAL NOT NULL, `amount` REAL NOT NULL, `type` INTEGER NOT NULL )'
 INSERT_TRADE_SQL='insert into trade (ts,per_profit,amount,type)values(?,?,?,?)'
+HEALTH_CHECK_INTERVAL=60*2
 FINISH_TRADE_LST=[]
 conn = sqlite3.connect('trade.db')
 def initAll():
@@ -142,9 +143,22 @@ async def order_check():
 			cursor.close()
 			FINISH_TRADE_LST=[]
 			logger.info('FINISH BACKUP trade item.')
+async def health_check():
+	global HEALTH_CHECK_INTERVAL
+	poloniex_ask_head_all='begin'
+	poloniex_bid_head_all='begin'
+	while True:
+		await asyncio.sleep(HEALTH_CHECK_INTERVAL)
+		if poloniex_bid_head_all == poloniexUtil.bid_head_all or poloniex_ask_head_all== poloniexUtil.ask_head_all:
+			logger.error("poloniex order head update die !!!")
+			sys.exit(-1)
+		else:
+			poloniex_bid_head_all = poloniexUtil.bid_head_all
+			poloniex_ask_head_all = poloniexUtil.ask_head_all
+
 async def deal_handler():
 	initAll()
-	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),refreshWallet(),order_check()],return_when=asyncio.FIRST_COMPLETED,)
+	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),refreshWallet(),order_check(),health_check()],return_when=asyncio.FIRST_COMPLETED,)
 async def backgroud(app):
 	app.loop.create_task(deal_handler())
 
