@@ -30,7 +30,7 @@ __version__ = 0.1
 __date__ = '2018-01-06'
 __updated__ = '2018-01-06'
 
-SELECT_SQL='select  diversion,timestamp from bookOrder where type=? '
+SELECT_SQL='select  diversion,timestamp from bookOrder where type=?  and diversion>-10'
 
 
 def parse(pair,date):
@@ -42,11 +42,14 @@ def parse(pair,date):
     ex2_buy=pd.read_sql_query(SELECT_SQL, conn,params=(1,),index_col='timestamp')
     ex2_buy.index = pd.to_datetime(ex2_buy.index,unit='s')
     conn.close()
-
-    # res_df=pd.concat([ex1_buy,ex2_buy],axis=1)
+    span=20
+    freq='600S'
+    ewma=pd.ewma(ex1_buy, span=span, freq=freq,adjust=True)
+    ewma.name='ex1 buy ewma1'
+    res_df=pd.concat([ewma],axis=1)
     # print(res_df)
-    ex1_buy['diversion'].resample('600S').ohlc().plot()
-    # ex1_buy.plot()
+    
+    ex1_buy.plot()
     plt.show()
        
 
@@ -61,9 +64,8 @@ def main(argv=None):
     parser = OptionParser()
     parser.add_option("-d", "--date", dest="date", help="select date")
     parser.add_option("-p", "--pair", dest="pair", help="set pair")
-    parser.add_option("-m", "--mode", dest="mode", help="set direction")
     # set defaults
-    parser.set_defaults(pair='LTC_USDT',date="2018-03-07",)
+    parser.set_defaults(pair='ETC_USDT',date="2018-03-06",)
 
 
 

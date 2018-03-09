@@ -23,7 +23,7 @@ from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
 import time
 SUPPOR_PAIR='ETC_USDT'
-MAX_TRADE_SIZE=3
+MAX_TRADE_SIZE=5
 okexUtil=okexUtil(SUPPOR_PAIR)
 poloniexUtil=poloniexUtil(SUPPOR_PAIR)
 OK_BUY_THRES=0.1
@@ -147,6 +147,8 @@ async def health_check():
 	global HEALTH_CHECK_INTERVAL
 	poloniex_ask_head_all='begin'
 	poloniex_bid_head_all='begin'
+	okex_ask_head_all='begin'
+	okex_bid_head_all='begin'
 	while True:
 		await asyncio.sleep(HEALTH_CHECK_INTERVAL)
 		if poloniex_bid_head_all == poloniexUtil.bid_head_all or poloniex_ask_head_all== poloniexUtil.ask_head_all:
@@ -155,6 +157,13 @@ async def health_check():
 		else:
 			poloniex_bid_head_all = poloniexUtil.bid_head_all
 			poloniex_ask_head_all = poloniexUtil.ask_head_all
+		if okex_ask_head_all ==okexUtil.ask_head_all or okex_bid_head_all == okexUtil.bid_head_all:
+			logger.error("okex order head update die!!!")
+			sys.exit(-1)
+		else:
+			okex_ask_head_all=okexUtil.ask_head_all
+			okex_bid_head_all=okexUtil.bid_head_all
+
 
 async def deal_handler():
 	initAll()

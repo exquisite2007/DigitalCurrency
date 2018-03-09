@@ -46,7 +46,7 @@ class okexUtil:
 			url="https://www.okex.com/api/v1/"+command
 			return json.loads(requests.post(url,data=params).text)
 		except Exception as e:
-			raise Exception(self.name,'Error in handleRequest:{}|{}'.format(command,params))
+			raise Exception(self.name,'Error in handleRequest:{}|{}|{}'.format(command,params,e))
 
 
 	async def buy(self,rate,amount):
@@ -111,6 +111,7 @@ class okexUtil:
 					while True:
 						message = await websocket.recv()
 						res=json.loads(message)
+						print(message)
 						if type(res) is list and res[0]['channel'].startswith('ok'):
 							ask_map={}
 							for item in res[0]['data']['asks']:
@@ -173,14 +174,15 @@ class okexUtil:
 		# 			cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
 		# 			if cancel_res is not None and cancel_res['result']==True:
 		# 				await self.buy(head_res[0],item['amount'])
-
+async def test():
+	pass
 
 def main(argv=None):
 	parser = OptionParser()
 	parser.add_option("-m", "--mode", dest="mode", help="0-wallet,1-buy,2-sell")
 	parser.add_option("-r", "--rate", dest="rate", help="rate")
 	parser.add_option("-a", "--amount", dest="amount", help="amount")
-	parser.set_defaults(mode=0)
+	parser.set_defaults(mode=1)
 	util=okexUtil('ETC_USDT')
 	loop=asyncio.get_event_loop()
 
@@ -193,6 +195,8 @@ def main(argv=None):
 
 	if int(opts.mode) == 0:
 		loop.run_until_complete(util.unfinish_order())
+	if int(opts.mode) ==1:
+		loop.run_until_complete(util.order_book(test))
 
 if __name__ == "__main__":
 	sys.exit(main())
