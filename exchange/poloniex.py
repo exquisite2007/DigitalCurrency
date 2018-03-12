@@ -174,14 +174,13 @@ class poloniexUtil:
 					while True:
 						message = await websocket.recv()
 						res=json.loads(message)
-						if len(res)<2:
+						if len(res)<3:
 							continue
-						for item in res[2]:
-							if item[0] == 173:
-								last=item[1]
-								ask1=item[2]
-								bid1=item[3]
-								await trade_handler(ask1,bid1,last)
+						if res[2][0] == 173:
+							last=res[2][1]
+							ask1=res[2][2]
+							bid1=res[2][3]
+							await trade_handler(ask1,bid1,last)
 			except Exception as e:
 				logger.error('poloniex ticker connect:{}'.format(e))
 	def get_orderbook_head(self):

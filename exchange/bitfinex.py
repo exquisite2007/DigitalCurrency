@@ -92,7 +92,6 @@ class bitfinexUtil:
 						res=json.loads(message)
 						if type(res) is not list:
 							continue
-						print(message)
 						data=res[1]
 						if type(data) is not list:
 							continue
