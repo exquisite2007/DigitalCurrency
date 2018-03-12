@@ -63,6 +63,7 @@ class huobiUtil:
 					await websocket.send(json.dumps(param))	
 					while True:
 						msg=await websocket.recv()
+						print(msg)
 						message = json.loads(gzip.decompress(msg))	
 						if 'ping' in message:
 							await websocket.send(json.dumps({'pong':message['ping']}))
