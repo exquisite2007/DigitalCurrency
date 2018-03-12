@@ -122,7 +122,7 @@ def main(argv=None):
 	# util.secret_key=os.environ['bitfinex_secret_key']
 	(opts, args) = parser.parse_args(argv)
 	loop=asyncio.get_event_loop()
-	loop.run_until_complete(util.order_book(test))
+	loop.run_until_complete(util.ticker(test))
 if __name__ == "__main__":
 	sys.exit(main())
 
