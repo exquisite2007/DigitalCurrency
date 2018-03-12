@@ -80,9 +80,32 @@ class bitfinexUtil:
 			ask_heads=self.ask_head_all.split(':')
 			bid_heads=self.bid_head_all.split(':')
 			return (float(ask_heads[0]),float(ask_heads[1]),float(bid_heads[0]),float(bid_heads[1]))
+	async def ticker(self,trade_handler):
+		while True:
+			try:
+				async with websockets.connect('wss://api.bitfinex.com/ws/2') as websocket:
+				
+					param={'event':'subscribe','channel':'ticker','symbol':self.CURRENT_PAIR}
+					await websocket.send(json.dumps(param))	
+					while True:
+						message = await websocket.recv()
+						res=json.loads(message)
+						if type(res) is not list:
+							continue
 
-async def test():
-	print('nothing here:{}'.format(util.get_orderbook_head()))
+						data=res[1]
+						if type(data) is not list:
+							continue
+						ask1=data[0]
+						bid1=data[2]
+						last=date[6]
+						await trade_handler(ask1,bid1,last)
+			except Exception as e:
+				self.ORDER_BOOK={}
+				logger.error('ERROR happen in bitfinex connection:{}'.format(e))
+
+async def test(ask1,bid1,last):
+	print('test:{},{},{}'.format(ask1,bid1,last))
 def main(argv=None):
 	parser = OptionParser()
 	parser.add_option("-m", "--mode", dest="mode", help="0-wallet,1-buy,2-sell")
