@@ -98,7 +98,7 @@ class bitfinexUtil:
 							continue
 						ask1=data[0]
 						bid1=data[2]
-						last=date[6]
+						last=data[6]
 						await trade_handler(ask1,bid1,last)
 			except Exception as e:
 				self.ORDER_BOOK={}
