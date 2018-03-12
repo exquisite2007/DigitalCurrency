@@ -5,6 +5,8 @@ import hashlib
 import hmac
 import asyncio
 import websockets
+import sys
+from optparse import OptionParser
 from time import time
 try:
     #python2
@@ -163,7 +165,7 @@ class poloniexUtil:
 				self.ask_head_all=None
 				self.bid_head_all=None
 				logger.error('poloniex BOOK connect:{}'.format(e))
-	async def ticker(trade_handler):
+	async def ticker(self,trade_handler):
 		while True:
 			try:
 				async with websockets.connect('wss://api2.poloniex.com/') as websocket:
@@ -181,7 +183,7 @@ class poloniexUtil:
 								bid1=item[3]
 								await trade_handler(ask1,bid1,last)
 			except Exception as e:
-				logger.error('poloniex BOOK connect:{}'.format(e))
+				logger.error('poloniex ticker connect:{}'.format(e))
 	def get_orderbook_head(self):
 		if self.ask_head_all is None or self.bid_head_all is None:
 			raise Exception(self.name,'Error in get_orderbook_head')
@@ -227,7 +229,7 @@ def main(argv=None):
 	parser.add_option("-p", "--pair", dest="pair", help="pair")
 	parser.set_defaults(mode=0,pair='ETC_USDT')
 	
-	util = bitfinexUtil('ETC_USDT')
+	util = poloniexUtil('ETC_USDT')
 	
 	# if 'bitfinex_access_key' not in os.environ:
 	# 	return
