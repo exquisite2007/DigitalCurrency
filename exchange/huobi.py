@@ -30,6 +30,7 @@ class huobiUtil:
 		self.bid_head_all=None
 	access_key=None
 	secret_key=None
+
 	async def order_book(self,trade_handler):
 		while True:
 			async with websockets.connect('wss://api.huobi.pro/ws') as websocket:
@@ -54,6 +55,22 @@ class huobiUtil:
 			ask_heads=self.ask_head_all.split(':')
 			bid_heads=self.bid_head_all.split(':')
 			return (float(ask_heads[0]),float(ask_heads[1]),float(bid_heads[0]),float(bid_heads[1]))
+	async def ticker(self,trade_handler):
+		while True:
+			async with websockets.connect('wss://api.huobi.pro/ws') as websocket:
+				try:
+					param={'sub':'market.'+self.CURRENT_PAIR+'.detail','id':'5201314'}
+					await websocket.send(json.dumps(param))	
+					while True:
+						msg=await websocket.recv()
+						message = json.loads(gzip.decompress(msg))	
+						if 'ping' in message:
+							await websocket.send(json.dumps({'pong':message['ping']}))
+						else:
+							print (message)
+				except Exception as e:
+					logger.error('ERROR happen in huobi connection:{}'.format(e))
+					websocket.close()
 
 async def test():
 	print('nothing here:{}'.format('larla'))
@@ -70,7 +87,7 @@ def main(argv=None):
 	# util.secret_key=os.environ['bitfinex_secret_key']
 	(opts, args) = parser.parse_args(argv)
 	loop=asyncio.get_event_loop()
-	loop.run_until_complete(util.order_book(test))
+	loop.run_until_complete(util.ticker(test))
 if __name__ == "__main__":
 	sys.exit(main())
 

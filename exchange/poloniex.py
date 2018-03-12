@@ -163,6 +163,25 @@ class poloniexUtil:
 				self.ask_head_all=None
 				self.bid_head_all=None
 				logger.error('poloniex BOOK connect:{}'.format(e))
+	async def ticker(trade_handler):
+		while True:
+			try:
+				async with websockets.connect('wss://api2.poloniex.com/') as websocket:
+					param={'command':'subscribe','channel':1002}
+					await websocket.send(json.dumps(param))	
+					while True:
+						message = await websocket.recv()
+						res=json.loads(message)
+						if len(res)<2:
+							continue
+						for item in res[2]:
+							if item[0] == 173:
+								last=item[1]
+								ask1=item[2]
+								bid1=item[3]
+								await trade_handler()
+			except Exception as e:
+				logger.error('poloniex BOOK connect:{}'.format(e))
 	def get_orderbook_head(self):
 		if self.ask_head_all is None or self.bid_head_all is None:
 			raise Exception(self.name,'Error in get_orderbook_head')

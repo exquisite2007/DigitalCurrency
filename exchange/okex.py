@@ -78,9 +78,9 @@ class okexUtil:
 		else:
 			raise Exception(self.name,'Error in unfinish_order')
 
-	async def cancel_order(self,orderId,pair):
+	async def cancel_order(self,orderId):
 		loop=asyncio.get_event_loop()
-		params={'order_id':orderId,'symbol':pair}
+		params={'order_id':orderId,'symbol':self.CURRENT_PAIR}
 		res = await loop.run_in_executor(None, self.handleRequest,'cancel_order.do',params)
 		if res is not None and res['result']==True:
 			return res
@@ -137,6 +137,26 @@ class okexUtil:
 				self.ORDER_BOOK={}
 				self.ask_head_all=None
 				self.bid_head_all=None
+	async def ticker_data(self,trade_handler):
+		channel='ok_sub_spot_'+self.CURRENT_PAIR+'_ticker'
+		while True:
+			try:
+				logger.info('OKEX BOOK start to connect')
+				async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
+
+					logger.info('OKEX enter communication')
+					param={'event':'addChannel','channel':channel}
+					await websocket.send(json.dumps(param))
+					while True:
+						message = await websocket.recv()
+						res=json.loads(message)
+						if type(res) is list and res[0]['channel'].startswith('ok'):
+							ask1=float(res[0]['data']['sell'])
+							bid1=float(res[0]['data']['buy'])
+							last=float(res[0]['data']['last'])
+							await trade_handler(ask1,bid1,last)
+			except Exception as le:
+				logger.error('OKEX BOOK connect:{}'.format(le))
 
 	def get_orderbook_head(self):
 		if self.ask_head_all is None or self.bid_head_all is None:
@@ -174,7 +194,7 @@ class okexUtil:
 		# 			cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
 		# 			if cancel_res is not None and cancel_res['result']==True:
 		# 				await self.buy(head_res[0],item['amount'])
-async def test():
+async def test(ask1,bid1):
 	pass
 
 def main(argv=None):
