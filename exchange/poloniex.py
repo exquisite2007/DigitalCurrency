@@ -179,7 +179,7 @@ class poloniexUtil:
 								last=item[1]
 								ask1=item[2]
 								bid1=item[3]
-								await trade_handler()
+								await trade_handler(ask1,bid1,last)
 			except Exception as e:
 				logger.error('poloniex BOOK connect:{}'.format(e))
 	def get_orderbook_head(self):
@@ -217,4 +217,24 @@ class poloniexUtil:
 		# 			lst.append(self.move_order(item['orderNumber'],head[0]))
 		# 	if len(lst)>0:
 		# 		await asyncio.wait(lst,return_when=asyncio.FIRST_COMPLETED,)
-
+async def test(ask1,bid1,last):
+	print('test:{},{},{}'.format(ask1,bid1,last))
+def main(argv=None):
+	parser = OptionParser()
+	parser.add_option("-m", "--mode", dest="mode", help="0-wallet,1-buy,2-sell")
+	parser.add_option("-r", "--rate", dest="rate", help="rate")
+	parser.add_option("-a", "--amount", dest="amount", help="amount")
+	parser.add_option("-p", "--pair", dest="pair", help="pair")
+	parser.set_defaults(mode=0,pair='ETC_USDT')
+	
+	util = bitfinexUtil('ETC_USDT')
+	
+	# if 'bitfinex_access_key' not in os.environ:
+	# 	return
+	# util.access_key=os.environ['bitfinex_access_key']
+	# util.secret_key=os.environ['bitfinex_secret_key']
+	(opts, args) = parser.parse_args(argv)
+	loop=asyncio.get_event_loop()
+	loop.run_until_complete(util.ticker(test))
+if __name__ == "__main__":
+	sys.exit(main())

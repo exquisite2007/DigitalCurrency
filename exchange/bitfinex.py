@@ -92,7 +92,7 @@ class bitfinexUtil:
 						res=json.loads(message)
 						if type(res) is not list:
 							continue
-
+						print(message)
 						data=res[1]
 						if type(data) is not list:
 							continue
@@ -101,7 +101,6 @@ class bitfinexUtil:
 						last=data[6]
 						await trade_handler(ask1,bid1,last)
 			except Exception as e:
-				self.ORDER_BOOK={}
 				logger.error('ERROR happen in bitfinex connection:{}'.format(e))
 
 async def test(ask1,bid1,last):
