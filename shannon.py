@@ -149,8 +149,9 @@ async def trade():
 			DIGITAL_COIN_NUM+=balance_diff/(1-CHANGE_RATE_THRESHOLD)
 			logger.info('state <dark green>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,last_balance_price))
 
-
+async def deal_handler():
+	return await asyncio.wait([okexUtil.ticker(trade)])
 loop=asyncio.get_event_loop()
-loop.run_until_complete(okexUtil.ticker(trade))
+loop.run_until_complete(deal_handler())
 
 

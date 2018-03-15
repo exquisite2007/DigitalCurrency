@@ -190,7 +190,7 @@ class okexUtil:
 			avaliable_amount=self.WALLET[self.CURRENCY[1]]['free']/rate/(1+self.BUY_PATCH)
 			cost=self.TAKER_FEE*rate*(1+self.BUY_PATCH)
 			return(avaliable_amount,cost)
-	def ping(self):
+	async def ping(self):
 		if self.websocket is not None:
 			param={'event':'ping'}
 			await self.websocket.send(json.dumps(param))
