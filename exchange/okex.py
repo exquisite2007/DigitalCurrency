@@ -152,7 +152,7 @@ class okexUtil:
 			try:
 				logger.info('OKEX BOOK start to connect')
 				async with websockets.connect('wss://real.okex.com:10441/websocket') as websocket:
-
+					self.websocket = websocket
 					logger.info('OKEX enter communication')
 					param={'event':'addChannel','channel':channel}
 					await websocket.send(json.dumps(param))
@@ -190,7 +190,10 @@ class okexUtil:
 			avaliable_amount=self.WALLET[self.CURRENCY[1]]['free']/rate/(1+self.BUY_PATCH)
 			cost=self.TAKER_FEE*rate*(1+self.BUY_PATCH)
 			return(avaliable_amount,cost)
-
+	def ping(self):
+		if self.websocket is not None:
+			param={'event':'ping'}
+			await self.websocket.send(json.dumps(param))
 	async def unfinish_order_handler(self):
 		res = await self.unfinish_order()
 		# if res is not None and len(res)>0:

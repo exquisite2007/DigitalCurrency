@@ -89,7 +89,7 @@ async def trade():
 		logger.info('re-fetch wallet info,DIGITAL_COIN_NUM :{},FIAT_COIN_NUM:{}'.format(DIGITAL_COIN_NUM,FIAT_COIN_NUM))
 		TRADE_LOCK = False
 	total_value = DIGITAL_COIN_NUM * last + FIAT_COIN_NUM
-	diff = (FIAT_COIN_NUM -total_value)/2
+	diff = FIAT_COIN_NUM -total_value/2
 	diff_rate = 1-DIGITAL_COIN_NUM * last/(FIAT_COIN_NUM+0.000000000001) 
 	last_price= FIAT_COIN_NUM/(DIGITAL_COIN_NUM+0.00000000000001)
 	logger.info('CURRENCY diff: {},diff_rate:{},DIGITAL_COIN_NUM :{},FIAT_COIN_NUM:{},last balance:{}'.format(diff,diff_rate,DIGITAL_COIN_NUM,FIAT_COIN_NUM,last_price))
@@ -114,7 +114,7 @@ async def trade():
 		if ORDER_ID is None: 
 			TRADE_LOCK = True
 			last_balance_price = FIAT_COIN_NUM/DIGITAL_COIN_NUM
-			ORDER_ID = await  util.buy(last_balance_price*(1+CHANGE_RATE_THRESHOLD),diff/(last_balance_price*(1+CHANGE_RATE_THRESHOLD)))
+			ORDER_ID = await  util.buy(last_balance_price*(1-CHANGE_RATE_THRESHOLD),diff/(last_balance_price*(1+CHANGE_RATE_THRESHOLD)))
 			logger.info('state <light red>')
 			TRADE_LOCK = False
 	elif  abs(diff_rate) <= CHANGE_RATE_THRESHOLD /2: #中段，进似平衡
@@ -129,8 +129,7 @@ async def trade():
 		if ORDER_ID is None: 
 			TRADE_LOCK = True
 			last_balance_price = FIAT_COIN_NUM/DIGITAL_COIN_NUM
-			ORDER_ID = await  util.sell(last_balance_price*(1-CHANGE_RATE_THRESHOLD),diff/(last_balance_price*(1-CHANGE_RATE_THRESHOLD)))
-			logger.info('PREPARE LOWER')
+			ORDER_ID = await  util.sell(last_balance_price*(1+CHANGE_RATE_THRESHOLD),diff/(last_balance_price*(1-CHANGE_RATE_THRESHOLD)))
 			TRADE_LOCK = False
 			logger.info('state <light green>')
 	elif -diff_rate >CHANGE_RATE_THRESHOLD: #上段，数字币远多于法币
