@@ -24,6 +24,7 @@ class okexUtil:
 		self.BUY_PATCH=(1+self.TAKER_FEE)*self.TAKER_FEE
 		self.ask_head_all=None
 		self.bid_head_all=None
+		self.ticker_value=None
 	access_key=None
 	secret_key=None
 
@@ -49,11 +50,15 @@ class okexUtil:
 			raise Exception(self.name,'Error in handleRequest:{}|{}|{}'.format(command,params,e))
 
 
-	async def buy(self,rate,amount):
+	async def buy(self,rate,amount,is_market=False):
 		patch_amount=amount*(1+self.BUY_PATCH)	
 		self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
 		self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
-		params={'symbol':self.CURRENT_PAIR,'type':'buy','price':rate,'amount':patch_amount}
+		params={}
+		if is_market:
+			params={'symbol':self.CURRENT_PAIR,'type':'buy_market','amount':patch_amount}
+		else:
+			params={'symbol':self.CURRENT_PAIR,'type':'buy','price':rate,'amount':patch_amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
 		logger.debug('[OKEX] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
@@ -61,10 +66,14 @@ class okexUtil:
 
 
 		
-	async def sell(self,rate,amount):
+	async def sell(self,rate,amount,is_market=False):
 		self.WALLET[self.CURRENCY[0]]['free']-=amount
 		self.WALLET[self.CURRENCY[0]]['locked']+=amount
-		params={'symbol':self.CURRENT_PAIR,'type':'sell','price':rate,'amount':amount}
+		params={}
+		if is_market:
+			params={'symbol':self.CURRENT_PAIR,'type':'sell_market','amount':amount}
+		else:
+			params={'symbol':self.CURRENT_PAIR,'type':'sell','price':rate,'amount':amount}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.handleRequest,'trade.do',params)
 		logger.debug('[OKEX] sell request {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
@@ -137,7 +146,7 @@ class okexUtil:
 				self.ORDER_BOOK={}
 				self.ask_head_all=None
 				self.bid_head_all=None
-	async def ticker_data(self,trade_handler):
+	async def ticker(self,trade_handler):
 		channel='ok_sub_spot_'+self.CURRENT_PAIR+'_ticker'
 		while True:
 			try:
@@ -154,8 +163,10 @@ class okexUtil:
 							ask1=float(res[0]['data']['sell'])
 							bid1=float(res[0]['data']['buy'])
 							last=float(res[0]['data']['last'])
-							await trade_handler(ask1,bid1,last)
+							self.ticker_value=(ask1,bid1,last)
+							await trade_handler()
 			except Exception as le:
+				self.ticker_value=None
 				logger.error('OKEX BOOK connect:{}'.format(le))
 
 	def get_orderbook_head(self):

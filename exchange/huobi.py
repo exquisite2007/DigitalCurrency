@@ -46,7 +46,7 @@ class huobiUtil:
 							print (message)
 				except Exception as e:
 					self.ORDER_BOOK={}
-					logger.error('ERROR happen in huobi connection:{}'.format(e))
+					logger.error('ERROR happen in {} connection:{}'.format(huobiUtil.__name__,e))
 					websocket.close()
 	def get_orderbook_head(self):
 		if self.ask_head_all is None or self.bid_head_all is None:
@@ -69,7 +69,7 @@ class huobiUtil:
 						else:
 							print (message)
 				except Exception as e:
-					logger.error('ERROR happen in huobi connection:{}'.format(e))
+					logger.error('ERROR happen in {} connection:{}'.format(huobiUtil.__name__,e))
 					websocket.close()
 
 async def test():

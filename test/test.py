@@ -14,7 +14,7 @@ class test1:
 		future2 = loop.run_in_executor(None, requests.get, 'http://www.126.com')
 		response1 = await future1
 		response2 = await future2
-		print('Fiish')
+		print('Fiish:{}'.format(test1.__name__))
 test=test1()
 loop = asyncio.get_event_loop()
 loop.run_until_complete(test.main(123))

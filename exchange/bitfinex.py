@@ -27,6 +27,7 @@ class bitfinexUtil:
 		self.TAKER_FEE=0.002
 		self.ask_head_all=None
 		self.bid_head_all=None
+		self.ticker_value=None
 	access_key=None
 	secret_key=None
 	async def order_book(self,trade_handler):
@@ -98,8 +99,10 @@ class bitfinexUtil:
 						ask1=data[0]
 						bid1=data[2]
 						last=data[6]
-						await trade_handler(ask1,bid1,last)
+						self.ticker_value=(ask1,bid1,last)
+						await trade_handler()
 			except Exception as e:
+				self.ticker_value = None
 				logger.error('ERROR happen in bitfinex connection:{}'.format(e))
 
 async def test(ask1,bid1,last):

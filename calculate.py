@@ -15,6 +15,7 @@ import sys
 import random
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
+from exchange.bitfinex import bitfinexUtil
 from datetime import datetime
 import sqlite3
 SUPPORT_PAIR='ETC_USDT'
@@ -30,6 +31,8 @@ logger.addHandler(ch)
 logger.info('BEGIN monitor {}'.format(SUPPORT_PAIR))
 okexUtil=okexUtil(SUPPORT_PAIR)
 poloniexUtil=poloniexUtil(SUPPORT_PAIR)
+bitfinexUtil=bitfinexUtil(SUPPORT_PAIR)
+exchanges=[okexUtil,poloniexUtil,bitfinexUtil]
 MINIST_VALUE=-999999
 exch1_exch2_max=MINIST_VALUE
 exch2_exch1_max=MINIST_VALUE
@@ -40,23 +43,29 @@ PERIORD=3*60*60
 REPORT_INTERVAL=60
 INSERT_SQL='insert into  bookOrder (diversion,timestamp,exchange,type) values(?,?,?,?)'
 CREATE_SQL='CREATE TABLE IF NOT EXISTS bookOrder (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,diversion real,timestamp INTEGER,exchange text,type INTEGER)'
-
+COMBINATION=[(0,1),(1,0),(0,2),(1,2),(2,0),(2,1)]
 ENABLE_TRADE_MODIFY=0
 if 'enable_trade_modify' in os.environ:
 	ENABLE_TRADE_MODIFY=1
 
 async def trade_handler():
 	try:
-		global exch1_exch2_max
-		global exch2_exch1_max
-		(ok_ask_head,ok_ask_head_volume,ok_bid_head,ok_bid_head_volume)=okexUtil.get_orderbook_head()
-		(poloniex_ask_head,poloniex_ask_head_volume,poloniex_bid_head,poloniex_bid_head_volume)=poloniexUtil.get_orderbook_head()
-		
+		global COMBINATION
+		global exchanges
+		local_diff_max=-99999
+		local_exchange_pair=None
+		for item in COMBINATION:
+			if exchanges[item[0]].ticker_data is None or exchanges[item[1]].ticker_data is None:
+				continue
+			diff = exchanges[item[0]].ticker_data[1] 
+					- exchanges[item[1]].ticker_data[0]
+					-exchanges[item[0]].ticker_data[1]*exchanges[item[0]].TAKER_FEE
+					-exchanges[item[1]].ticker_data[0]*exchanges[item[1]].TAKER_FEE
 
-		ok_buy_profit=poloniex_bid_head-ok_ask_head -(poloniex_bid_head*0.0025+ok_ask_head*0.002)
-		poloniex_buy_profit=ok_bid_head-poloniex_ask_head-(ok_bid_head*0.002+poloniex_ask_head*0.0025)
-		exch1_exch2_max=max(ok_buy_profit,exch1_exch2_max)
-		exch2_exch1_max=max(poloniex_buy_profit,exch2_exch1_max)		
+			if diff>localMax:
+				local_exchange_pair = item
+				localMax=diff
+			
 	except Exception as e:
 		logger.error("Trade_handler_error:{}".format(e))
 async def sampler():

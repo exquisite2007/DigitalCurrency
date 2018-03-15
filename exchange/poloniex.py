@@ -30,6 +30,7 @@ class poloniexUtil:
 		self.BUY_PATCH=(1+self.TAKER_FEE)*self.TAKER_FEE
 		self.ask_head_all=None
 		self.bid_head_all=None
+		self.ticker_value=None
 	access_key=None
 	secret_key=None
 
@@ -180,8 +181,10 @@ class poloniexUtil:
 							last=res[2][1]
 							ask1=res[2][2]
 							bid1=res[2][3]
-							await trade_handler(ask1,bid1,last)
+							self.ticker_value=(ask1,bid1,last)
+							await trade_handler()
 			except Exception as e:
+				self.ticker_value=None
 				logger.error('poloniex ticker connect:{}'.format(e))
 	def get_orderbook_head(self):
 		if self.ask_head_all is None or self.bid_head_all is None:
