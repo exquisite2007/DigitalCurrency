@@ -141,7 +141,7 @@ async def trade():
 			DIGITAL_COIN_NUM-=balance_diff/(1-CHANGE_RATE_THRESHOLD)
 			logger.info('state <dark green>:{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM))
 	TRADE_LOCK = False
-async health_check():
+async def health_check():
 	while True:
 		await asyncio.sleep(30)
 		await okexUtil.ping()
