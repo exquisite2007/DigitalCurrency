@@ -27,8 +27,8 @@ SUPPOR_PAIR='ETC_USDT'
 okexUtil=okexUtil(SUPPOR_PAIR)
 util=fakeUtil(SUPPOR_PAIR)
 
-util.WALLET[util.CURRENCY[0]]={'free':30}
-util.WALLET[util.CURRENCY[1]]={'free':0}
+util.WALLET[util.CURRENCY[0]]={'free':0}
+util.WALLET[util.CURRENCY[1]]={'free':1200}
 
 CREATE_SYSTEM_SQL='CREATE TABLE IF NOT EXISTS `system` ( `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `key` TEXT NOT NULL, `value` TEXT NOT NULL )'
 SELECT_SYSTEM_SQL='SELECT * from system'
@@ -39,34 +39,21 @@ DIGITAL_COIN_NUM=None
 FIAT_COIN_NUM=None
 
 TRADE_LOCK=False
-CHANGE_RATE_THRESHOLD=0.02
+
+
+# BUY_RATE_THRESHOLD=0.0196
+# SELL_RATE_THRESHOLD=0.02
+# BUY_RATE_THRESHOLD=0.04761904762
+# SELL_RATE_THRESHOLD=0.05
+BUY_RATE_THRESHOLD=0.04761904762
+SELL_RATE_THRESHOLD=0.05
+# BUY_RATE_THRESHOLD=0.0909
+# SELL_RATE_THRESHOLD=0.1
+# BUY_RATE_THRESHOLD=0.16668
+# SELL_RATE_THRESHOLD=0.2
 ORDER_ID=None #为空表示没有挂单，非空表示有挂单
 IS_INTITIAL_FINISH=False
-def init():
-	cursor = conn.cursor()
-	cursor.execute(CREATE_SYSTEM_SQL)
-	cursor.execute(CREATE_TRADE_SQL)
-	cursor.execute(SELECT_SYSTEM_SQL)
-	sysMap={}
-	for item in cursor.fetchall():
-		sysMap[item[1]]=item[2]
-	global OK_BUY_THRES
-	sysLst=[]
-	if 'OK_BUY_THRES' in sysMap:
-		OK_BUY_THRES=float(sysMap['OK_BUY_THRES'])
-	else:
-		sysLst.append(('OK_BUY_THRES',str(OK_BUY_THRES)))
-	global POLO_BUY_THRES
-	if 'POLO_BUY_THRES' in sysMap:
-		POLO_BUY_THRES=float(sysMap['POLO_BUY_THRES'])
-	else:
-		sysLst.append(('POLO_BUY_THRES',str(POLO_BUY_THRES)))
-	if len(sysLst)>0:
-		cursor.executemany(INSERT_SYSTEM_SQL,sysLst)
-		cursor.connection.commit()
 
-	logger.info('Finish init all')
-	cursor.close()
 
 async def trade():
 	(ask1,bid1,last) = okexUtil.ticker_value
@@ -77,7 +64,8 @@ async def trade():
 	global FIAT_COIN_NUM
 
 
-	global CHANGE_RATE_THRESHOLD
+	global BUY_RATE_THRESHOLD
+	global SELL_RATE_THRESHOLD
 	if TRADE_LOCK:
 		logger.debug('Ignore ticker')
 		return
@@ -91,8 +79,9 @@ async def trade():
 	total_value = DIGITAL_COIN_NUM * last + FIAT_COIN_NUM
 	diff = FIAT_COIN_NUM -total_value/2
 	diff_rate = 1-DIGITAL_COIN_NUM * last/(FIAT_COIN_NUM+0.000000000001) 
+	state=None
 	logger.info('CURRENCY diff: {},diff_rate:{},DIGITAL_COIN_NUM :{},FIAT_COIN_NUM:{}'.format(diff,diff_rate,DIGITAL_COIN_NUM,FIAT_COIN_NUM))
-	if  diff_rate > CHANGE_RATE_THRESHOLD:#下段，法币远多于数字币，不平衡状态
+	if  diff_rate > BUY_RATE_THRESHOLD:#下段，法币远多于数字币，不平衡状态
 		if ORDER_ID is None:#
 			TRADE_LOCK=True
 			amount=diff/ask1
@@ -103,32 +92,37 @@ async def trade():
 		else:#从中下段 进入下段
 			ORDER_ID = None
 			last_balance_price = FIAT_COIN_NUM/DIGITAL_COIN_NUM
-			balance_diff = DIGITAL_COIN_NUM*last_balance_price*CHANGE_RATE_THRESHOLD/2
-			predict_balance_diff = (FIAT_COIN_NUM - DIGITAL_COIN_NUM*last_balance_price*(1-CHANGE_RATE_THRESHOLD))/2
+			balance_diff = DIGITAL_COIN_NUM*last_balance_price*BUY_RATE_THRESHOLD/2
+			predict_balance_diff = (FIAT_COIN_NUM - DIGITAL_COIN_NUM*last_balance_price*(1-BUY_RATE_THRESHOLD))/2
 			FIAT_COIN_NUM-=predict_balance_diff
-			DIGITAL_COIN_NUM+=predict_balance_diff/(last_balance_price*(1-CHANGE_RATE_THRESHOLD))
+			DIGITAL_COIN_NUM+=predict_balance_diff/(last_balance_price*(1-BUY_RATE_THRESHOLD))
+			state='dark_red'
+			logger.info('trade buy {} at {}'.format(predict_balance_diff/(last_balance_price*(1-BUY_RATE_THRESHOLD)),last_balance_price*(1-BUY_RATE_THRESHOLD)))
 			logger.info('state <dark red>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,FIAT_COIN_NUM/DIGITAL_COIN_NUM))
 
-	elif diff_rate > CHANGE_RATE_THRESHOLD /2 and diff_rate < CHANGE_RATE_THRESHOLD:#中下段，法币多，数字币少
+	elif diff_rate > BUY_RATE_THRESHOLD /2 and diff_rate < BUY_RATE_THRESHOLD:#中下段，法币多，数字币少
 		if ORDER_ID is None: 
 			last_balance_price = FIAT_COIN_NUM/DIGITAL_COIN_NUM
-			predict_balance_diff = (FIAT_COIN_NUM - DIGITAL_COIN_NUM*last_balance_price*(1-CHANGE_RATE_THRESHOLD))/2
+			predict_balance_diff = (FIAT_COIN_NUM - DIGITAL_COIN_NUM*last_balance_price*(1-BUY_RATE_THRESHOLD))/2
 
-			ORDER_ID = await  util.buy(last_balance_price*(1-CHANGE_RATE_THRESHOLD),predict_balance_diff/(last_balance_price*(1-CHANGE_RATE_THRESHOLD)))
+			ORDER_ID = await  util.buy(last_balance_price*(1-BUY_RATE_THRESHOLD),predict_balance_diff/(last_balance_price*(1-BUY_RATE_THRESHOLD)))
+			state='light_red'
 			logger.info('state <light red>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,FIAT_COIN_NUM/DIGITAL_COIN_NUM))
-	elif  abs(diff_rate) <= CHANGE_RATE_THRESHOLD /2: #中段，进似平衡
+	elif (diff_rate>= 0 and diff_rate <= BUY_RATE_THRESHOLD /2) or(diff_rate<0 and -diff_rate <= SELL_RATE_THRESHOLD /2):
 		if ORDER_ID is not None:
 			await util.cancel_order(ORDER_ID)
 			ORDER_ID=None
+			state='white'
 			logger.info('state <white>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,FIAT_COIN_NUM/DIGITAL_COIN_NUM))
-			#TODO:平衡		
-	elif -diff_rate >  CHANGE_RATE_THRESHOLD /2 and - diff_rate <= CHANGE_RATE_THRESHOLD:#中上段，法币少，数字币多
+			#TODO:平衡	
+	elif -diff_rate >  SELL_RATE_THRESHOLD/2 and - diff_rate <= SELL_RATE_THRESHOLD:#中上段，法币少，数字币多
 		if ORDER_ID is None: 
 			last_balance_price = FIAT_COIN_NUM/DIGITAL_COIN_NUM
-			predict_balance_diff=(DIGITAL_COIN_NUM*last_balance_price*(1+CHANGE_RATE_THRESHOLD)-FIAT_COIN_NUM)/2
-			ORDER_ID = await  util.sell(last_balance_price*(1+CHANGE_RATE_THRESHOLD),predict_balance_diff/(last_balance_price*(1+CHANGE_RATE_THRESHOLD)))
+			predict_balance_diff=(DIGITAL_COIN_NUM*last_balance_price*(1+SELL_RATE_THRESHOLD)-FIAT_COIN_NUM)/2
+			ORDER_ID = await  util.sell(last_balance_price*(1+SELL_RATE_THRESHOLD),predict_balance_diff/(last_balance_price*(1+SELL_RATE_THRESHOLD)))
+			state='light_green'
 			logger.info('state <light green>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,FIAT_COIN_NUM/DIGITAL_COIN_NUM))
-	elif -diff_rate >CHANGE_RATE_THRESHOLD: #上段，数字币远多于法币
+	elif -diff_rate >SELL_RATE_THRESHOLD: #上段，数字币远多于法币
 		if ORDER_ID is None:#
 			amount=-diff/bid1
 			res =await util.sell(bid1,amount,is_market=True)
@@ -138,18 +132,44 @@ async def trade():
 		else:#从中上段 进入上段
 			ORDER_ID = None
 			last_balance_price = FIAT_COIN_NUM/DIGITAL_COIN_NUM
-			predict_balance_diff=(DIGITAL_COIN_NUM*last_balance_price*(1+CHANGE_RATE_THRESHOLD)-FIAT_COIN_NUM)/2
+			predict_balance_diff=(DIGITAL_COIN_NUM*last_balance_price*(1+SELL_RATE_THRESHOLD)-FIAT_COIN_NUM)/2
 			FIAT_COIN_NUM+=predict_balance_diff
-			DIGITAL_COIN_NUM-=predict_balance_diff/(last_balance_price*(1+CHANGE_RATE_THRESHOLD))
+			DIGITAL_COIN_NUM-=predict_balance_diff/(last_balance_price*(1+SELL_RATE_THRESHOLD))
+			state='dark_green'
+			logger.info('trade sell {} at {}'.format(predict_balance_diff/(last_balance_price*(1+SELL_RATE_THRESHOLD)),(last_balance_price*(1+SELL_RATE_THRESHOLD))))
 			logger.info('state <dark green>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,FIAT_COIN_NUM/DIGITAL_COIN_NUM))
 	TRADE_LOCK = False
+	return state
 async def health_check():
 	while True:
 		await asyncio.sleep(30)
 		await okexUtil.ping()
 async def deal_handler():
-	return await asyncio.wait([okexUtil.ticker(trade)])
+	return await asyncio.wait([okexUtil.ticker(trade),health_check()])
 loop=asyncio.get_event_loop()
 loop.run_until_complete(deal_handler())
+# async def test():
+# 	init_value =16.0
+# 	count = 50000
+# 	direction=-1
+# 	while count>0:
+# 		count-=1
+# 		okexUtil.ticker_value=(init_value,init_value,init_value)
+# 		state=await trade()
+# 		print(count)
+# 		if state=='dark_green' or state == 'dark_red':
+# 			direction*=-1
+# 		init_value+=direction*0.01
 
+# 	# while init_value < 20:
+# 	# 	init_value+=0.01
+# 	# 	okexUtil.ticker_value=(init_value,init_value,init_value)
+# 	# 	await trade()
+
+# 	# while init_value>13:
+# 	# 	init_value-=0.01
+# 	# 	okexUtil.ticker_value=(init_value,init_value,init_value)
+# 	# 	await trade()
+
+# loop.run_until_complete(test())
 

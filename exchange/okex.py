@@ -194,6 +194,7 @@ class okexUtil:
 		if self.websocket is not None:
 			param={'event':'ping'}
 			await self.websocket.send(json.dumps(param))
+			logger.info('Finish send ping message')
 	async def unfinish_order_handler(self):
 		res = await self.unfinish_order()
 		# if res is not None and len(res)>0:

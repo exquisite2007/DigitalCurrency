@@ -25,13 +25,14 @@ class fakeUtil:
 		self.ask_head_all=None
 		self.bid_head_all=None
 		self.ticker_value=None
+		self.interval=1
 	access_key=None
 	secret_key=None
 
 
 
 	async def buy(self,rate,amount,is_market=False):
-		await asyncio.sleep(2)
+		await asyncio.sleep(self.interval)
 		self.WALLET[self.CURRENCY[0]]['free']+=amount*0.998
 		self.WALLET[self.CURRENCY[1]]['free']-=amount*rate
 		return random.randrange(1000000,20000000)
@@ -39,18 +40,18 @@ class fakeUtil:
 
 		
 	async def sell(self,rate,amount,is_market=False):
-		await asyncio.sleep(2)
+		await asyncio.sleep(self.interval)
 		self.WALLET[self.CURRENCY[0]]['free']-=amount
 		self.WALLET[self.CURRENCY[1]]['free']+=amount*rate *0.998
 		return random.randrange(1000000,20000000)
 	async def unfinish_order(self):
-		await asyncio.sleep(2)
+		await asyncio.sleep(self.interval)
 
 	async def cancel_order(self,orderId):
-		await asyncio.sleep(2)
+		await asyncio.sleep(self.interval)
 
 	async def init_wallet(self):
-		await asyncio.sleep(2)
+		await asyncio.sleep(self.interval)
 		logger.info('current wallet info {!r}'.format(self.WALLET))
 
 		
