@@ -91,8 +91,7 @@ async def trade():
 	total_value = DIGITAL_COIN_NUM * last + FIAT_COIN_NUM
 	diff = FIAT_COIN_NUM -total_value/2
 	diff_rate = 1-DIGITAL_COIN_NUM * last/(FIAT_COIN_NUM+0.000000000001) 
-	last_price= FIAT_COIN_NUM/(DIGITAL_COIN_NUM+0.00000000000001)
-	logger.info('CURRENCY diff: {},diff_rate:{},DIGITAL_COIN_NUM :{},FIAT_COIN_NUM:{},last balance:{}'.format(diff,diff_rate,DIGITAL_COIN_NUM,FIAT_COIN_NUM,last_price))
+	logger.info('CURRENCY diff: {},diff_rate:{},DIGITAL_COIN_NUM :{},FIAT_COIN_NUM:{}'.format(diff,diff_rate,DIGITAL_COIN_NUM,FIAT_COIN_NUM))
 	if  diff_rate > CHANGE_RATE_THRESHOLD:#下段，法币远多于数字币，不平衡状态
 		if ORDER_ID is None:#
 			TRADE_LOCK=True
@@ -114,21 +113,21 @@ async def trade():
 		if ORDER_ID is None: 
 			last_balance_price = FIAT_COIN_NUM/DIGITAL_COIN_NUM
 			predict_balance_diff = (FIAT_COIN_NUM - DIGITAL_COIN_NUM*last_balance_price*(1-CHANGE_RATE_THRESHOLD))/2
-			
+
 			ORDER_ID = await  util.buy(last_balance_price*(1-CHANGE_RATE_THRESHOLD),predict_balance_diff/(last_balance_price*(1-CHANGE_RATE_THRESHOLD)))
-			logger.info('state <light red>')
+			logger.info('state <light red>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,FIAT_COIN_NUM/DIGITAL_COIN_NUM))
 	elif  abs(diff_rate) <= CHANGE_RATE_THRESHOLD /2: #中段，进似平衡
 		if ORDER_ID is not None:
 			await util.cancel_order(ORDER_ID)
 			ORDER_ID=None
-			logger.info('state <white>')
+			logger.info('state <white>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,FIAT_COIN_NUM/DIGITAL_COIN_NUM))
 			#TODO:平衡		
 	elif -diff_rate >  CHANGE_RATE_THRESHOLD /2 and - diff_rate <= CHANGE_RATE_THRESHOLD:#中上段，法币少，数字币多
 		if ORDER_ID is None: 
 			last_balance_price = FIAT_COIN_NUM/DIGITAL_COIN_NUM
 			predict_balance_diff=(DIGITAL_COIN_NUM*last_balance_price*(1+CHANGE_RATE_THRESHOLD)-FIAT_COIN_NUM)/2
 			ORDER_ID = await  util.sell(last_balance_price*(1+CHANGE_RATE_THRESHOLD),predict_balance_diff/(last_balance_price*(1+CHANGE_RATE_THRESHOLD)))
-			logger.info('state <light green>')
+			logger.info('state <light green>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,FIAT_COIN_NUM/DIGITAL_COIN_NUM))
 	elif -diff_rate >CHANGE_RATE_THRESHOLD: #上段，数字币远多于法币
 		if ORDER_ID is None:#
 			amount=-diff/bid1
