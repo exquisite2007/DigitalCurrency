@@ -23,7 +23,7 @@ if 'pair' in os.environ:
 	SUPPORT_PAIR=os.environ['pair']
 logger = logging.getLogger("deal")
 logger.setLevel(logging.DEBUG)
-ch = TimedRotatingFileHandler(SUPPORT_PAIR+'.log', when='D', interval=1, backupCount=3)
+ch = TimedRotatingFileHandler('cal_'+SUPPORT_PAIR+'.log', when='D', interval=1, backupCount=3)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
