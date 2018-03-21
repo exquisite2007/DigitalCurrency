@@ -178,9 +178,9 @@ class poloniexUtil:
 						if len(res)<3:
 							continue
 						if res[2][0] == 173:
-							last=res[2][1]
-							ask1=res[2][2]
-							bid1=res[2][3]
+							last=float(res[2][1])
+							ask1=float(res[2][2])
+							bid1=float(res[2][3])
 							self.ticker_value=(ask1,bid1,last)
 							await trade_handler()
 			except Exception as e:

@@ -19,6 +19,7 @@ logger = logging.getLogger("deal")
 BOOK_LIMIT=10
 class bitfinexUtil:
 	def __init__(self,pair):
+		self.name='bitfinex'
 		self.PAIR_MAP={'BTC_ETH':'ETHBTC','BTC_LTC':'LTCBTC','BTC_USDT':'BTCUSD','ETC_USDT':'ETCUSD'}	
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=[self.CURRENT_PAIR[:3],self.CURRENT_PAIR[-3:]]
@@ -96,9 +97,9 @@ class bitfinexUtil:
 						data=res[1]
 						if type(data) is not list:
 							continue
-						ask1=data[0]
-						bid1=data[2]
-						last=data[6]
+						ask1=float(data[0])
+						bid1=float(data[2])
+						last=float(data[6])
 						self.ticker_value=(ask1,bid1,last)
 						await trade_handler()
 			except Exception as e:
