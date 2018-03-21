@@ -124,7 +124,7 @@ async def percentile():
 
 
 async def deal_handler():
-	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),bitfinexUtil.order_book(trade_handler)],return_when=asyncio.FIRST_COMPLETED,)
+	return await asyncio.wait([item.ticker(trade_handler) for item in exchanges],return_when=asyncio.FIRST_COMPLETED,)
 
 loop=asyncio.get_event_loop()
 loop.run_until_complete(deal_handler())
