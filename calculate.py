@@ -41,8 +41,8 @@ exch2_exch1_lst=[]
 SAMPLE_INTERVAL=1
 PERIORD=3*60*60
 REPORT_INTERVAL=60
-INSERT_SQL='insert into  bookOrder (diversion,timestamp,ex_buy,ex_sell) values(?,?,?,?)'
-CREATE_SQL='CREATE TABLE IF NOT EXISTS bookOrder (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,diversion real,timestamp INTEGER,ex_buy text,ex_sell text)'
+INSERT_SQL='insert into  ticker_diff (diversion,timestamp,ex_buy,ex_sell) values(?,?,?,?)'
+CREATE_SQL='CREATE TABLE IF NOT EXISTS ticker_diff (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,diversion real,timestamp INTEGER,ex_buy text,ex_sell text)'
 COMBINATION=[(0,1),(1,0),(0,2),(1,2),(2,0),(2,1)]
 ENABLE_TRADE_MODIFY=0
 if 'enable_trade_modify' in os.environ:
@@ -62,9 +62,12 @@ async def trade_handler():
 			if diff>local_diff_max:
 				local_exchange_pair = item
 				local_diff_max=diff
+
+		if local_exchange_pair is not None:
+			logger.info('buy from {} and sell from {}, difference is {}'.format(exchanges[local_exchange_pair[1]].name,exchanges[local_exchange_pair[0]].name,local_diff_max))
+
 		# if local_exchange_pair is not None and local_diff_max >0.02:
 		if local_exchange_pair is not None and local_diff_max>0.01:
-			logger.info('buy from {} and sell from {}, difference is {}'.format(exchanges[local_exchange_pair[1]].name,exchanges[local_exchange_pair[0]].name,local_diff_max))
 			dbFile = 'orderbook_'+SUPPORT_PAIR+'_'+datetime.now().strftime("%Y-%m-%d")+'.db'
 			conn = sqlite3.connect(dbFile)
 			cursor = conn.cursor()
@@ -78,30 +81,6 @@ async def trade_handler():
 	
 	except Exception as e:
 		logger.error("Trade_handler_error:{}".format(e))
-async def sampler():
-	global exch1_exch2_max
-	global exch2_exch1_max
-	global MINIST_VALUE
-	global SUPPORT_PAIR
-	while True:
-		await asyncio.sleep(SAMPLE_INTERVAL)
-		logger.info('sample record {},{}'.format(exch1_exch2_max,exch2_exch1_max))
-		exch1_exch2_lst.append(exch1_exch2_max)
-		exch2_exch1_lst.append(exch2_exch1_max)
-		
-		dbFile = 'orderbook_'+SUPPORT_PAIR+'_'+datetime.now().strftime("%Y-%m-%d")+'.db'
-		conn = sqlite3.connect(dbFile)
-		cursor = conn.cursor()
-		cursor.execute(CREATE_SQL)		
-		lst=[]
-		ts= int(time.time())
-		lst.append((exch1_exch2_max,ts,'ok_polo',0))
-		lst.append((exch2_exch1_max,ts,'ok_polo',1))
-		cursor.executemany(INSERT_SQL,lst)
-		cursor.connection.commit()
-		conn.close()
-		exch1_exch2_max=MINIST_VALUE
-		exch2_exch1_max=MINIST_VALUE
 
 async def percentile():
 	while True:
