@@ -41,8 +41,8 @@ exch2_exch1_lst=[]
 SAMPLE_INTERVAL=1
 PERIORD=3*60*60
 REPORT_INTERVAL=60
-INSERT_SQL='insert into  bookOrder (diversion,timestamp,exchange,type) values(?,?,?,?)'
-CREATE_SQL='CREATE TABLE IF NOT EXISTS bookOrder (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,diversion real,timestamp INTEGER,exchange text,type INTEGER)'
+INSERT_SQL='insert into  bookOrder (diversion,timestamp,ex_buy,ex_sell) values(?,?,?,?)'
+CREATE_SQL='CREATE TABLE IF NOT EXISTS bookOrder (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,diversion real,timestamp INTEGER,ex_buy text,ex_sell text)'
 COMBINATION=[(0,1),(1,0),(0,2),(1,2),(2,0),(2,1)]
 ENABLE_TRADE_MODIFY=0
 if 'enable_trade_modify' in os.environ:
@@ -63,9 +63,19 @@ async def trade_handler():
 				local_exchange_pair = item
 				local_diff_max=diff
 		# if local_exchange_pair is not None and local_diff_max >0.02:
-		if local_exchange_pair is not None:
+		if local_exchange_pair is not None and local_diff_max>0.01:
 			logger.info('buy from {} and sell from {}, difference is {}'.format(exchanges[local_exchange_pair[1]].name,exchanges[local_exchange_pair[0]].name,local_diff_max))
-			
+			dbFile = 'orderbook_'+SUPPORT_PAIR+'_'+datetime.now().strftime("%Y-%m-%d")+'.db'
+			conn = sqlite3.connect(dbFile)
+			cursor = conn.cursor()
+			cursor.execute(CREATE_SQL)		
+			lst=[]
+			ts= int(time.time())
+			lst.append((local_diff_max,ts,exchanges[local_exchange_pair[1]].name,exchanges[local_exchange_pair[0]].name))
+			cursor.executemany(INSERT_SQL,lst)
+			cursor.connection.commit()
+			conn.close()
+	
 	except Exception as e:
 		logger.error("Trade_handler_error:{}".format(e))
 async def sampler():
