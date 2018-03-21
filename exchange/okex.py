@@ -120,7 +120,6 @@ class okexUtil:
 					while True:
 						message = await websocket.recv()
 						res=json.loads(message)
-						print(message)
 						if type(res) is list and res[0]['channel'].startswith('ok'):
 							ask_map={}
 							for item in res[0]['data']['asks']:

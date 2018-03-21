@@ -41,12 +41,12 @@ FIAT_COIN_NUM=None
 TRADE_LOCK=False
 
 
-# BUY_RATE_THRESHOLD=0.0196
-# SELL_RATE_THRESHOLD=0.02
+BUY_RATE_THRESHOLD=0.0196
+SELL_RATE_THRESHOLD=0.02
 # BUY_RATE_THRESHOLD=0.04761904762
 # SELL_RATE_THRESHOLD=0.05
-BUY_RATE_THRESHOLD=0.04761904762
-SELL_RATE_THRESHOLD=0.05
+# BUY_RATE_THRESHOLD=0.04761904762
+# SELL_RATE_THRESHOLD=0.05
 # BUY_RATE_THRESHOLD=0.0909
 # SELL_RATE_THRESHOLD=0.1
 # BUY_RATE_THRESHOLD=0.16668
@@ -147,29 +147,29 @@ async def health_check():
 async def deal_handler():
 	return await asyncio.wait([okexUtil.ticker(trade),health_check()])
 loop=asyncio.get_event_loop()
-loop.run_until_complete(deal_handler())
-# async def test():
-# 	init_value =16.0
-# 	count = 50000
-# 	direction=-1
-# 	while count>0:
-# 		count-=1
-# 		okexUtil.ticker_value=(init_value,init_value,init_value)
-# 		state=await trade()
-# 		print(count)
-# 		if state=='dark_green' or state == 'dark_red':
-# 			direction*=-1
-# 		init_value+=direction*0.01
+# loop.run_until_complete(deal_handler())
+async def test():
+	init_value =16.0
+	# count = 100
+	# direction=-1
+	# while count>0:
+	# 	count-=1
+	# 	okexUtil.ticker_value=(init_value,init_value,init_value)
+	# 	state=await trade()
+	# 	print(count)
+	# 	if state=='dark_green' or state == 'dark_red':
+	# 		direction*=-1
+	# 	init_value+=direction*0.01
 
-# 	# while init_value < 20:
-# 	# 	init_value+=0.01
-# 	# 	okexUtil.ticker_value=(init_value,init_value,init_value)
-# 	# 	await trade()
+	while init_value < 20:
+		init_value+=0.01
+		okexUtil.ticker_value=(init_value,init_value,init_value)
+		await trade()
 
-# 	# while init_value>13:
-# 	# 	init_value-=0.01
-# 	# 	okexUtil.ticker_value=(init_value,init_value,init_value)
-# 	# 	await trade()
+	while init_value>13:
+		init_value-=0.01
+		okexUtil.ticker_value=(init_value,init_value,init_value)
+		await trade()
 
-# loop.run_until_complete(test())
+loop.run_until_complete(test())
 

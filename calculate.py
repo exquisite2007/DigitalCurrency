@@ -57,14 +57,14 @@ async def trade_handler():
 		for item in COMBINATION:
 			if exchanges[item[0]].ticker_data is None or exchanges[item[1]].ticker_data is None:
 				continue
-			diff = exchanges[item[0]].ticker_data[1] 
-					- exchanges[item[1]].ticker_data[0]
-					-exchanges[item[0]].ticker_data[1]*exchanges[item[0]].TAKER_FEE
-					-exchanges[item[1]].ticker_data[0]*exchanges[item[1]].TAKER_FEE
+			diff = exchanges[item[0]].ticker_data[1]- exchanges[item[1]].ticker_data[0]-exchanges[item[0]].ticker_data[1]*exchanges[item[0]].TAKER_FEE-exchanges[item[1]].ticker_data[0]*exchanges[item[1]].TAKER_FEE
 
 			if diff>localMax:
 				local_exchange_pair = item
 				localMax=diff
+		# if local_exchange_pair is not None and local_diff_max >0.02:
+		if local_exchange_pair is not None:
+			logger.info('buy from {} and sell from {}, difference is {}'.format(exchanges[local_exchange_pair[1]].name,exchanges[local_exchange_pair[0]].name,local_diff_max))
 			
 	except Exception as e:
 		logger.error("Trade_handler_error:{}".format(e))
@@ -124,7 +124,7 @@ async def percentile():
 
 
 async def deal_handler():
-	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),sampler(),percentile()],return_when=asyncio.FIRST_COMPLETED,)
+	return await asyncio.wait([poloniexUtil.order_book(trade_handler),okexUtil.order_book(trade_handler),bitfinexUtil.order_book(trade_handler)],return_when=asyncio.FIRST_COMPLETED,)
 
 loop=asyncio.get_event_loop()
 loop.run_until_complete(deal_handler())
