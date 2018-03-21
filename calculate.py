@@ -59,9 +59,9 @@ async def trade_handler():
 				continue
 			diff = exchanges[item[0]].ticker_value[1]- exchanges[item[1]].ticker_value[0]-exchanges[item[0]].ticker_value[1]*exchanges[item[0]].TAKER_FEE-exchanges[item[1]].ticker_value[0]*exchanges[item[1]].TAKER_FEE
 
-			if diff>localMax:
+			if diff>local_diff_max:
 				local_exchange_pair = item
-				localMax=diff
+				local_diff_max=diff
 		# if local_exchange_pair is not None and local_diff_max >0.02:
 		if local_exchange_pair is not None:
 			logger.info('buy from {} and sell from {}, difference is {}'.format(exchanges[local_exchange_pair[1]].name,exchanges[local_exchange_pair[0]].name,local_diff_max))
