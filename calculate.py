@@ -55,9 +55,9 @@ async def trade_handler():
 		local_diff_max=-99999
 		local_exchange_pair=None
 		for item in COMBINATION:
-			if exchanges[item[0]].ticker_data is None or exchanges[item[1]].ticker_data is None:
+			if exchanges[item[0]].ticker_value is None or exchanges[item[1]].ticker_value is None:
 				continue
-			diff = exchanges[item[0]].ticker_data[1]- exchanges[item[1]].ticker_data[0]-exchanges[item[0]].ticker_data[1]*exchanges[item[0]].TAKER_FEE-exchanges[item[1]].ticker_data[0]*exchanges[item[1]].TAKER_FEE
+			diff = exchanges[item[0]].ticker_value[1]- exchanges[item[1]].ticker_value[0]-exchanges[item[0]].ticker_value[1]*exchanges[item[0]].TAKER_FEE-exchanges[item[1]].ticker_value[0]*exchanges[item[1]].TAKER_FEE
 
 			if diff>localMax:
 				local_exchange_pair = item
