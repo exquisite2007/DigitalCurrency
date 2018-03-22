@@ -19,7 +19,7 @@ from exchange.bitfinex import bitfinexUtil
 from exchange.huobi import huobiUtil
 from datetime import datetime
 import sqlite3
-import match
+import math
 SUPPORT_PAIR='ETC_USDT'
 if 'pair' in os.environ:
 	SUPPORT_PAIR=os.environ['pair']
