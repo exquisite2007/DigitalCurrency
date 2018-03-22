@@ -72,6 +72,8 @@ class huobiUtil:
 							
 							self.ticker_value=(message['asks'][0][0],message['bids'][0][0],None)
 							await trade_handler()
+						else:
+							print(message)
 			except Exception as e:
 				self.ticker_value=None
 				logger.error('ERROR happen in {} connection:{}'.format(huobiUtil.__name__,e))
