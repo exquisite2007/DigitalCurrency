@@ -46,7 +46,7 @@ PERIORD=3*60*60
 REPORT_INTERVAL=60
 INSERT_SQL='insert into  ticker_diff (diversion,timestamp,ex_buy,ex_sell) values(?,?,?,?)'
 CREATE_SQL='CREATE TABLE IF NOT EXISTS ticker_diff (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,diversion real,timestamp INTEGER,ex_buy text,ex_sell text)'
-COMBINATION=[(0,1),(1,0),(0,2),(1,2),(2,0),(2,1),(0,3)(1,3),(2,3),(3,0),(3,1),(3,2)]
+COMBINATION=[(0,1),(1,0),(0,2),(1,2),(2,0),(2,1),(0,3),(1,3),(2,3),(3,0),(3,1),(3,2)]
 COMBINATION_INDEX=int(math.factorial(len(exchanges))/math.factorial(len(exchanges)-2))
 ENABLE_TRADE_MODIFY=0
 if 'enable_trade_modify' in os.environ:
