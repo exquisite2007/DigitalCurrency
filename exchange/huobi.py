@@ -65,7 +65,7 @@ class huobiUtil:
 						message = json.loads(gzip.decompress(msg).decode("utf-8"))	
 						if 'ping' in message:
 							await websocket.send(json.dumps({'pong':message['ping']}))
-						else:
+						elif 'asks' in message:
 							print (message)
 							ask_head_all=str(message['asks'][0][0])+':'+str(message['asks'][0][1])
 							bid_head_all=str(message['bids'][0][0])+':'+str(message['bids'][0][1])
