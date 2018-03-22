@@ -66,11 +66,10 @@ class huobiUtil:
 						if 'ping' in message:
 							await websocket.send(json.dumps({'pong':message['ping']}))
 						elif 'tick' in message:
-							print (message)
 							ask_head_all=str(message['tick']['asks'][0][0])+':'+str(message['tick']['asks'][0][1])
 							bid_head_all=str(message['tick']['bids'][0][0])+':'+str(message['tick']['bids'][0][1])
 							
-							self.ticker_value=(message['asks'][0][0],message['bids'][0][0],None)
+							self.ticker_value=(message['tick']['asks'][0][0],message['tick']['bids'][0][0],None)
 							await trade_handler()
 						else:
 							print(message)
