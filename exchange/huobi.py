@@ -66,9 +66,10 @@ class huobiUtil:
 						if 'ping' in message:
 							await websocket.send(json.dumps({'pong':message['ping']}))
 						else:
+							print (message)
 							ask_head_all=str(message['asks'][0][0])+':'+str(message['asks'][0][1])
 							bid_head_all=str(message['bids'][0][0])+':'+str(message['bids'][0][1])
-							print (message)
+							
 							self.ticker_value=(message['asks'][0][0],message['bids'][0][0],None)
 							await trade_handler()
 			except Exception as e:
@@ -100,7 +101,7 @@ def main(argv=None):
 	# util.secret_key=os.environ['bitfinex_secret_key']
 	(opts, args) = parser.parse_args(argv)
 	loop=asyncio.get_event_loop()
-	loop.run_until_complete(util.order_book(test))
+	loop.run_until_complete(util.ticker(test))
 if __name__ == "__main__":
 	sys.exit(main())
 
