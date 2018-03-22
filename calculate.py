@@ -16,8 +16,10 @@ import random
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
 from exchange.bitfinex import bitfinexUtil
+from exchange.huobi import huobiUtil
 from datetime import datetime
 import sqlite3
+import match
 SUPPORT_PAIR='ETC_USDT'
 if 'pair' in os.environ:
 	SUPPORT_PAIR=os.environ['pair']
@@ -32,7 +34,8 @@ logger.info('BEGIN monitor {}'.format(SUPPORT_PAIR))
 okexUtil=okexUtil(SUPPORT_PAIR)
 poloniexUtil=poloniexUtil(SUPPORT_PAIR)
 bitfinexUtil=bitfinexUtil(SUPPORT_PAIR)
-exchanges=[okexUtil,poloniexUtil,bitfinexUtil]
+huobiUtil = huobiUtil(SUPPORT_PAIR)
+exchanges=[okexUtil,poloniexUtil,bitfinexUtil,huobiUtil]
 MINIST_VALUE=-999999
 exch1_exch2_max=MINIST_VALUE
 exch2_exch1_max=MINIST_VALUE
@@ -43,7 +46,8 @@ PERIORD=3*60*60
 REPORT_INTERVAL=60
 INSERT_SQL='insert into  ticker_diff (diversion,timestamp,ex_buy,ex_sell) values(?,?,?,?)'
 CREATE_SQL='CREATE TABLE IF NOT EXISTS ticker_diff (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,diversion real,timestamp INTEGER,ex_buy text,ex_sell text)'
-COMBINATION=[(0,1),(1,0),(0,2),(1,2),(2,0),(2,1)]
+COMBINATION=[(0,1),(1,0),(0,2),(1,2),(2,0),(2,1),(0,3)(1,3),(2,3),(3,0),(3,1),(3,2)]
+COMBINATION_INDEX=int(math.factorial(len(exchanges))/math.factorial(len(exchanges)-2))
 ENABLE_TRADE_MODIFY=0
 if 'enable_trade_modify' in os.environ:
 	ENABLE_TRADE_MODIFY=1
@@ -51,10 +55,11 @@ if 'enable_trade_modify' in os.environ:
 async def trade_handler():
 	try:
 		global COMBINATION
+		global COMBINATION_INDEX
 		global exchanges
 		local_diff_max=-99999
 		local_exchange_pair=None
-		for item in COMBINATION:
+		for item in COMBINATION[:COMBINATION_INDEX]:
 			if exchanges[item[0]].ticker_value is None or exchanges[item[1]].ticker_value is None:
 				continue
 			diff = exchanges[item[0]].ticker_value[1]- exchanges[item[1]].ticker_value[0]-exchanges[item[0]].ticker_value[1]*exchanges[item[0]].TAKER_FEE-exchanges[item[1]].ticker_value[0]*exchanges[item[1]].TAKER_FEE
@@ -67,7 +72,7 @@ async def trade_handler():
 			logger.info('buy from {} and sell from {}, difference is {}'.format(exchanges[local_exchange_pair[1]].name,exchanges[local_exchange_pair[0]].name,local_diff_max))
 
 		# if local_exchange_pair is not None and local_diff_max >0.02:
-		if local_exchange_pair is not None and local_diff_max>0.01:
+		if local_exchange_pair is not None and local_diff_max>0.02:
 			dbFile = 'orderbook_'+SUPPORT_PAIR+'_'+datetime.now().strftime("%Y-%m-%d")+'.db'
 			conn = sqlite3.connect(dbFile)
 			cursor = conn.cursor()

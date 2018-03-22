@@ -140,12 +140,9 @@ async def trade():
 			logger.info('state <dark green>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,FIAT_COIN_NUM/DIGITAL_COIN_NUM))
 	TRADE_LOCK = False
 	return state
-async def health_check():
-	while True:
-		await asyncio.sleep(30)
-		await okexUtil.ping()
+
 async def deal_handler():
-	return await asyncio.wait([okexUtil.ticker(trade),health_check()])
+	return await asyncio.wait([okexUtil.ticker(trade),okexUtil.health_check()])
 loop=asyncio.get_event_loop()
 # loop.run_until_complete(deal_handler())
 async def test():

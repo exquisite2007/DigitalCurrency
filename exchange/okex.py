@@ -189,11 +189,13 @@ class okexUtil:
 			avaliable_amount=self.WALLET[self.CURRENCY[1]]['free']/rate/(1+self.BUY_PATCH)
 			cost=self.TAKER_FEE*rate*(1+self.BUY_PATCH)
 			return(avaliable_amount,cost)
-	async def ping(self):
-		if self.websocket is not None:
-			param={'event':'ping'}
-			await self.websocket.send(json.dumps(param))
-			logger.info('Finish send ping message')
+	async def health_check(self):
+		while True:
+			await asyncio.sleep(30)
+			if self.websocket is not None:
+				param={'event':'ping'}
+				await self.websocket.send(json.dumps(param))
+				logger.info('Finish send ping message')
 	async def unfinish_order_handler(self):
 		res = await self.unfinish_order()
 		# if res is not None and len(res)>0:

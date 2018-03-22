@@ -144,25 +144,7 @@ async def order_check():
 			FINISH_TRADE_LST=[]
 			logger.info('FINISH BACKUP trade item.')
 async def health_check():
-	global HEALTH_CHECK_INTERVAL
-	poloniex_ask_head_all='begin'
-	poloniex_bid_head_all='begin'
-	okex_ask_head_all='begin'
-	okex_bid_head_all='begin'
-	while True:
-		await asyncio.sleep(HEALTH_CHECK_INTERVAL)
-		if poloniex_bid_head_all == poloniexUtil.bid_head_all or poloniex_ask_head_all== poloniexUtil.ask_head_all:
-			logger.error("poloniex order head update die !!!")
-			sys.exit(-1)
-		else:
-			poloniex_bid_head_all = poloniexUtil.bid_head_all
-			poloniex_ask_head_all = poloniexUtil.ask_head_all
-		if okex_ask_head_all ==okexUtil.ask_head_all or okex_bid_head_all == okexUtil.bid_head_all:
-			logger.error("okex order head update die!!!")
-			sys.exit(-1)
-		else:
-			okex_ask_head_all=okexUtil.ask_head_all
-			okex_bid_head_all=okexUtil.bid_head_all
+	await asyncio.wait([poloniexUtil.health_check(),okexUtil.health_check()],return_when=asyncio.FIRST_COMPLETED,)
 
 
 async def deal_handler():

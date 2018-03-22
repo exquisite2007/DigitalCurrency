@@ -31,6 +31,7 @@ class poloniexUtil:
 		self.ask_head_all=None
 		self.bid_head_all=None
 		self.ticker_value=None
+		self.NEED_RECONNECT=False
 	access_key=None
 	secret_key=None
 
@@ -123,7 +124,8 @@ class poloniexUtil:
 				async with websockets.connect('wss://api2.poloniex.com/') as websocket:
 					param={'command':'subscribe','channel':self.CURRENT_PAIR}
 					await websocket.send(json.dumps(param))	
-					while True:
+					self.NEED_RECONNECT=False
+					while not self.NEED_RECONNECT:# 为True的时候会导致结束循环，重新连接
 						message = await websocket.recv()
 						res=json.loads(message)
 						if len(res)<2:
@@ -221,6 +223,18 @@ class poloniexUtil:
 		# 			lst.append(self.move_order(item['orderNumber'],head[0]))
 		# 	if len(lst)>0:
 		# 		await asyncio.wait(lst,return_when=asyncio.FIRST_COMPLETED,)
+	async def health_check(self):
+		poloniex_ask_head_all='begin'
+		poloniex_bid_head_all='begin'
+		while True:
+			await asyncio.sleep(300)
+			if poloniex_bid_head_all == self.bid_head_all or poloniex_ask_head_all== self.ask_head_all:
+				logger.error("poloniex order head update die !!!")
+				self.NEED_RECONNECT=True
+			else:
+				poloniex_bid_head_all = self.bid_head_all
+				poloniex_ask_head_all = self.ask_head_all
+			
 async def test(ask1,bid1,last):
 	print('test:{},{},{}'.format(ask1,bid1,last))
 def main(argv=None):
