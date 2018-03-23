@@ -179,8 +179,9 @@ class huobiUtil:
 
 	async def buy(self,rate,amount,is_market=False):
 		patch_amount=amount*(1+self.BUY_PATCH)	
-		self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
-		self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
+		if self.WALLET is not None:
+			self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
+			self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
 		if self.account_id==0:
 			await self.get_account()
 		params={}
@@ -197,8 +198,9 @@ class huobiUtil:
 
 		
 	async def sell(self,rate,amount,is_market=False):
-		self.WALLET[self.CURRENCY[0]]['free']-=amount
-		self.WALLET[self.CURRENCY[0]]['locked']+=amount
+		if self.WALLET is not None:
+			self.WALLET[self.CURRENCY[0]]['free']-=amount
+			self.WALLET[self.CURRENCY[0]]['locked']+=amount
 		if self.account_id==0:
 			await self.get_account()
 		params={}
@@ -276,7 +278,9 @@ def main(argv=None):
 	if int(opts.mode)==0:
 		loop.run_until_complete(util.ticker(test))
 	if int(opts.mode)==1:
-		loop.run_until_complete(util.ticker(test))
+		loop.run_until_complete(util.buy(1,0.1))
+	if int(opts.mode)==2:
+		loop.run_until_complete(util.sell(100,0.1))
 	elif int(opts.mode)==3:
 		loop.run_until_complete(util.init_wallet())
 if __name__ == "__main__":
