@@ -194,7 +194,7 @@ class huobiUtil:
 		res = await loop.run_in_executor(None,self.api_key_post,params,'/v1/order/orders/place')
 		print(res)
 		logger.debug('[huobi] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
-		return res['order_id']
+		return res['data']
 
 
 		
@@ -213,7 +213,7 @@ class huobiUtil:
 		res = await loop.run_in_executor(None,self.api_key_post,params,'/v1/order/orders/place')
 		print(res)
 		logger.debug('[huobi] sell request {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
-		return res['order_id']
+		return res['data']
 	async def unfinish_order(self):
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.api_key_post,{'symbol':self.CURRENT_PAIR,'states':'submitted'},'/v1/order/orders')
@@ -284,6 +284,10 @@ def main(argv=None):
 		loop.run_until_complete(util.sell(100,0.1))
 	elif int(opts.mode)==3:
 		loop.run_until_complete(util.init_wallet())
+	elif int(opts.mode)==4:
+		loop.run_until_complete(util.unfinish_order())
+	elif int(opts.mode)==5:
+		loop.run_until_complete(util.cancel_order('2631428446'))
 if __name__ == "__main__":
 	sys.exit(main())
 
