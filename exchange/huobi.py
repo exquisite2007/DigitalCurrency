@@ -31,7 +31,6 @@ def http_get_request(url, params, add_to_headers=None):
 	if add_to_headers:
 		headers.update(add_to_headers)
 	postdata = urllib.parse.urlencode(params)
-	print('{},{}'.format(url,postdata))
 	response = requests.get(url, postdata, headers=headers, timeout=10) 
 	try:
 		
@@ -228,7 +227,6 @@ class huobiUtil:
 	async def get_account(self):
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.api_key_get,{},'/v1/account/accounts')
-		print(res)
 		self.account_id=res['data'][0]['id']
 
 
@@ -237,7 +235,6 @@ class huobiUtil:
 			await self.get_account()
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.api_key_get,{},'/v1/account/accounts/{0}/balance'.format(self.account_id))
-		print(res)
 		self.WALLET={}
 		if res is not None and res['status']=='ok':
 			for item in res['data']['list']:
@@ -246,10 +243,11 @@ class huobiUtil:
 						self.WALLET[cur]={}
 					if item['currency']== cur:
 						if item['type']=='trade':
-							self.WALLET[cur]['free']=float(res['info']['funds']['free'][self.CURRENCY[0]])
+							self.WALLET[cur]['free']=float(item['balance'])
 						elif item['type'] == 'frozen':
-							self.WALLET[cur]['locked']=float(res['info']['funds']['freezed'][self.CURRENCY[0]])
+							self.WALLET[cur]['locked']=float(item['balance'])
 			logger.info('Finish load huobi wallet:{}'.format(self.WALLET))
+			print(self.WALLET)
 		else:
 			raise Exception(self.name,'Error in init_wallet')
 
