@@ -180,9 +180,8 @@ class huobiUtil:
 
 	async def buy(self,rate,amount,is_market=False):
 		patch_amount=amount*(1+self.BUY_PATCH)	
-
-		# self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
-		# self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
+		self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
+		self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
 		if self.account_id==0:
 			await self.get_account()
 		params={}
@@ -192,7 +191,6 @@ class huobiUtil:
 			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'buy-limit',"price":rate}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.api_key_post,params,'/v1/order/orders/place')
-		print(res)
 		logger.debug('[huobi] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
 		return res['data']
 
@@ -211,18 +209,10 @@ class huobiUtil:
 			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'sell-limit',"price":rate}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.api_key_post,params,'/v1/order/orders/place')
-		print(res)
 		logger.debug('[huobi] sell request {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		return res['data']
 	async def unfinish_order(self):
-		loop=asyncio.get_event_loop()
-		res = await loop.run_in_executor(None, self.api_key_post,{'symbol':self.CURRENT_PAIR,'states':'submitted'},'/v1/order/orders')
-		logger.debug('[huobi] unfinished order get result:{}'.format(res))
-		print(res)
-		if res is not None and res['result']==True:
-			return res['orders']
-		else:
-			raise Exception(self.name,'Error in unfinish_order')
+		raise Exception(self.name,'not implemented')
 
 	async def cancel_order(self,orderId):
 		# if self.account_id==0:
@@ -231,7 +221,7 @@ class huobiUtil:
 		
 		res = await loop.run_in_executor(None, self.api_key_post,{},"/v1/order/orders/{0}/submitcancel".format(orderId))
 		print(res)
-		if res is not None and res['result']==True:
+		if res is not None and res['status']=='ok':
 			return res
 		else:
 			raise Exception(self.name,'Error happen in cancel order {}'.format(orderId))
