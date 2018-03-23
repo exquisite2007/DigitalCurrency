@@ -239,10 +239,17 @@ class huobiUtil:
 		res = await loop.run_in_executor(None, self.api_key_get,{},'/v1/account/accounts/{0}/balance'.format(self.account_id))
 		print(res)
 		self.WALLET={}
-		if res is not None and res['result']==True:
-			self.WALLET[self.CURRENCY[0]]={'free':float(res['info']['funds']['free'][self.CURRENCY[0]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[0]])}
-			self.WALLET[self.CURRENCY[1]]={'free':float(res['info']['funds']['free'][self.CURRENCY[1]]),'locked':float(res['info']['funds']['freezed'][self.CURRENCY[1]])}
-			logger.info('Finish load okex wallet:{}'.format(self.WALLET))
+		if res is not None and res['status']=='ok':
+			for item in res['data']['list']:
+				for cur in self.CURRENCY:
+					if cur not in self.WALLET:
+						self.WALLET[cur]={}
+					if item['currency']== cur:
+						if item['type']=='trade':
+							self.WALLET[cur]['free']=float(res['info']['funds']['free'][self.CURRENCY[0]])
+						elif item['type'] == 'frozen':
+							self.WALLET[cur]['locked']=float(res['info']['funds']['freezed'][self.CURRENCY[0]])
+			logger.info('Finish load huobi wallet:{}'.format(self.WALLET))
 		else:
 			raise Exception(self.name,'Error in init_wallet')
 
