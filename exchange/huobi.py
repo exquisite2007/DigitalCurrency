@@ -87,6 +87,7 @@ class huobiUtil:
 		self.WALLET={}
 		self.ORDER_BOOK={}
 		self.TAKER_FEE=0.002
+		self.BUY_PATCH=(1+self.TAKER_FEE)*self.TAKER_FEE
 		self.ask_head_all=None
 		self.bid_head_all=None
 		self.ticker_value=None
