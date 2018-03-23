@@ -140,6 +140,10 @@ class huobiUtil:
 							ask_head_all=str(message['tick']['asks'][0][0])+':'+str(message['tick']['asks'][0][1])
 							bid_head_all=str(message['tick']['bids'][0][0])+':'+str(message['tick']['bids'][0][1])
 							print (message)
+							if ask_head_all != self.ask_head_all or bid_head_all != self.bid_head_all:
+								self.ask_head_all=ask_head_all
+								self.bid_head_all=bid_head_all
+								await trade_handler()
 				except Exception as e:
 					self.ORDER_BOOK={}
 					self.ask_head_all=None
@@ -267,7 +271,7 @@ def main(argv=None):
 	(opts, args) = parser.parse_args(argv)
 	loop=asyncio.get_event_loop()
 	if int(opts.mode)==0:
-		loop.run_until_complete(util.ticker(test))
+		loop.run_until_complete(util.order_book(test))
 	if int(opts.mode)==1:
 		loop.run_until_complete(util.buy(1,0.1))
 	if int(opts.mode)==2:
