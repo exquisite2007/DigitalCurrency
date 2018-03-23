@@ -180,9 +180,9 @@ class huobiUtil:
 
 	async def buy(self,rate,amount,is_market=False):
 		patch_amount=amount*(1+self.BUY_PATCH)	
-		if self.WALLET is not None:
-			self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
-			self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
+
+		# self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
+		# self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
 		if self.account_id==0:
 			await self.get_account()
 		params={}
@@ -191,7 +191,7 @@ class huobiUtil:
 		else:
 			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'buy-limit',"price":rate}
 		loop=asyncio.get_event_loop()
-		res = await loop.run_in_executor(None,api_key_post,params,'/v1/order/orders/place')
+		res = await loop.run_in_executor(None,self.api_key_post,params,'/v1/order/orders/place')
 		print(res)
 		logger.debug('[huobi] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
 		return res['order_id']
@@ -210,7 +210,7 @@ class huobiUtil:
 		else:
 			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'sell-limit',"price":rate}
 		loop=asyncio.get_event_loop()
-		res = await loop.run_in_executor(None,api_key_post,params,'/v1/order/orders/place')
+		res = await loop.run_in_executor(None,self.api_key_post,params,'/v1/order/orders/place')
 		print(res)
 		logger.debug('[huobi] sell request {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		return res['order_id']
