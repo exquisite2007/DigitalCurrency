@@ -181,6 +181,8 @@ class huobiUtil:
 		patch_amount=amount*(1+self.BUY_PATCH)	
 		self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
 		self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
+		if self.account_id==0:
+			await self.get_account()
 		params={}
 		if is_market:
 			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'buy-market'}
@@ -188,6 +190,7 @@ class huobiUtil:
 			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'buy-limit',"price":rate}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,api_key_post,params,'/v1/order/orders/place')
+		print(res)
 		logger.debug('[huobi] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
 		return res['order_id']
 
@@ -196,6 +199,8 @@ class huobiUtil:
 	async def sell(self,rate,amount,is_market=False):
 		self.WALLET[self.CURRENCY[0]]['free']-=amount
 		self.WALLET[self.CURRENCY[0]]['locked']+=amount
+		if self.account_id==0:
+			await self.get_account()
 		params={}
 		if is_market:
 			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'sell-market'}
@@ -203,26 +208,30 @@ class huobiUtil:
 			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'sell-limit',"price":rate}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,api_key_post,params,'/v1/order/orders/place')
+		print(res)
 		logger.debug('[huobi] sell request {}|{}|{}get result:{}'.format(self.CURRENT_PAIR,rate,amount,res))
 		return res['order_id']
 	async def unfinish_order(self):
 		loop=asyncio.get_event_loop()
-		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{'symbol':self.CURRENT_PAIR,'order_id':-1})
+		res = await loop.run_in_executor(None, self.api_key_post,{'symbol':self.CURRENT_PAIR,'states':'submitted'},'/v1/order/orders')
 		logger.debug('[huobi] unfinished order get result:{}'.format(res))
+		print(res)
 		if res is not None and res['result']==True:
 			return res['orders']
 		else:
 			raise Exception(self.name,'Error in unfinish_order')
 
 	async def cancel_order(self,orderId):
+		# if self.account_id==0:
+		# 	await self.get_account()
 		loop=asyncio.get_event_loop()
-		params={'order_id':orderId,'symbol':self.CURRENT_PAIR}
 		
-		res = await loop.run_in_executor(None, self.api_key_post,params,"/v1/order/orders/{0}/submitcancel".format(orderId))
+		res = await loop.run_in_executor(None, self.api_key_post,{},"/v1/order/orders/{0}/submitcancel".format(orderId))
+		print(res)
 		if res is not None and res['result']==True:
 			return res
 		else:
-			raise Exception(self.name,'Error happen in cancel order {}|{}'.format(orderId,pair))
+			raise Exception(self.name,'Error happen in cancel order {}'.format(orderId))
 
 	async def get_account(self):
 		loop=asyncio.get_event_loop()
@@ -265,6 +274,8 @@ def main(argv=None):
 	(opts, args) = parser.parse_args(argv)
 	loop=asyncio.get_event_loop()
 	if int(opts.mode)==0:
+		loop.run_until_complete(util.ticker(test))
+	if int(opts.mode)==1:
 		loop.run_until_complete(util.ticker(test))
 	elif int(opts.mode)==3:
 		loop.run_until_complete(util.init_wallet())
