@@ -6,6 +6,7 @@ import hmac
 import asyncio
 import websockets
 from time import time
+import base64
 import sys
 from optparse import OptionParser
 try:
@@ -31,6 +32,25 @@ class bitfinexUtil:
 		self.ticker_value=None
 	access_key=None
 	secret_key=None
+	@property
+	def _nonce(self):
+		"""
+		Returns a nonce
+		Used in authentication
+		"""
+		return str(time.time() * 1000000)
+
+	def _sign_payload(self, payload):
+		j = json.dumps(payload)
+		data = base64.standard_b64encode(j.encode('utf8'))
+
+		h = hmac.new(self.secret_key.encode('utf8'), data, hashlib.sha384)
+		signature = h.hexdigest()
+		return {
+			"X-BFX-APIKEY": self.access_key,
+			"X-BFX-SIGNATURE": signature,
+			"X-BFX-PAYLOAD": data
+		}
 	async def order_book(self,trade_handler):
 		while True:
 			async with websockets.connect('wss://api.bitfinex.com/ws/2') as websocket:
@@ -105,7 +125,45 @@ class bitfinexUtil:
 			except Exception as e:
 				self.ticker_value = None
 				logger.error('ERROR happen in bitfinex connection:{}'.format(e))
-
+	async def buy(self,rate,amount,is_market=False):
+		ord_type='limit'
+		if is_market:
+			ord_type='market'
+		params={
+			"request": "/v1/order/new",
+			"nonce": self._nonce,
+			"symbol": self.CURRENT_PAIR,
+			"amount": amount,
+			"price": rate,
+			"exchange": 'bitfinex',
+			"side": 'buy',
+			"type": ord_type
+		}
+	async def sell(self,rate,amount,is_market=False):
+		ord_type='limit'
+		if is_market:
+			ord_type='market'
+		params={
+			"request": "/v1/order/new",
+			"nonce": self._nonce,
+			"symbol": self.CURRENT_PAIR,
+			"amount": amount,
+			"price": rate,
+			"exchange": 'bitfinex',
+			"side": 'sell',
+			"type": ord_type
+		}
+	async def cancel_order(self,orderId):
+		params={
+			"request": "/v1/order/cancel",
+			"nonce": self._nonce,
+			"order_id": order_id
+		}
+	async def unfinish_order(self):
+		params = {
+			"request": "/v1/orders",
+			"nonce": self._nonce
+		}
 async def test(ask1,bid1,last):
 	print('test:{},{},{}'.format(ask1,bid1,last))
 def main(argv=None):
