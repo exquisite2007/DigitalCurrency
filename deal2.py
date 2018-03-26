@@ -91,11 +91,11 @@ async def trade_handler():
 			if ex2_buy_ex1_sell_profit>THRES_MAP[exchanges[exch_pair[0]].name+'_buy_'+exchanges[exch_pair[1]].name+'_sell_thres']:
 				min_volume=min([ex2_ask_head_volume,ex1_bid_head_volume,ex1_avaliable_sell,ex2_availiable_buy,MAX_TRADE_SIZE])
 				if min_volume< 0.01 or min_volume*ex2_ask_head<1:
-					logger.debug('[trade]no enough volume for trade in {} buy,give up:{}'.format(ex2_buy_profit))
+					logger.debug('[trade]no enough volume for trade in {} buy,give up:{}'.format(ex2_buy_ex1_sell_profit))
 				else:
 					results = await asyncio.gather(exchanges[exch_pair[0]].sell(ex1_bid_head,min_volume),exchanges[exch_pair[1]].buy(ex2_ask_head,min_volume),)
 					FINISH_TRADE_LST.append((ts,ex2_buy_ex1_sell_profit,min_volume,exchanges[exch_pair[0]].name,exchanges[exch_pair[1]].name,results[0],results[1]))
-					logger.info('[trade]Finish poloniex buy:{!r}. profit:{}'.format(results,ex2_buy_profit))
+					logger.info('[trade]Finish poloniex buy:{!r}. profit:{}'.format(results,ex2_buy_ex1_sell_profit))
 			logger.debug('buy from {} sell to {}:{} - {} ={}'.format(
 				exchanges[exch_pair[0]].name,exchanges[exch_pair[1]].name,
 				ex2_bid_head,ex1_ask_head,ex2_buy_ex1_sell_profit))			

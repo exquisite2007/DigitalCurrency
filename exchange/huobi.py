@@ -245,7 +245,6 @@ class huobiUtil:
 	async def get_account(self):
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.api_key_get,{},'/v1/account/accounts')
-		print(res)
 		self.account_id=res['data'][0]['id']
 
 
