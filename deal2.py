@@ -85,8 +85,8 @@ async def trade_handler():
 			(ex1_ask_head,ex1_ask_head_volume,ex1_bid_head,ex1_bid_head_volume)=exchanges[exch_pair[0]].get_orderbook_head()
 			(ex2_ask_head,ex2_ask_head_volume,ex2_bid_head,ex2_bid_head_volume)=exchanges[exch_pair[1]].get_orderbook_head()
 			(ex1_avaliable_sell,ex1_sell_one_cost)=exchanges[exch_pair[0]].get_sell_info(ex1_bid_head)
-			(ex2_availiable_buy,ex2_buy_one_cost)=exchanges[exch_pair[0]].get_buy_info(ex2_ask_head)
-			
+			(ex2_availiable_buy,ex2_buy_one_cost)=exchanges[exch_pair[1]].get_buy_info(ex2_ask_head)
+			print('{},{},{},{}'.format(ex1_avaliable_sell,ex1_sell_one_cost,ex2_availiable_buy,ex2_buy_one_cost))
 			ex2_buy_ex1_sell_profit=ex1_bid_head-ex2_ask_head-(ex1_sell_one_cost+ex2_buy_one_cost)
 			if ex2_buy_ex1_sell_profit>THRES_MAP[exchanges[exch_pair[0]].name+'_buy_'+exchanges[exch_pair[1]].name+'_sell_thres']:
 				min_volume=min([ex2_ask_head_volume,ex1_bid_head_volume,ex1_avaliable_sell,ex2_availiable_buy,MAX_TRADE_SIZE])
