@@ -80,6 +80,7 @@ async def trade_handler():
 		logger.debug('TradeLocked ignore the orderbook update')
 		return
 	trade_lock=True
+	ts=int(time.time())
 	try:
 		for exch_pair in COMBINATION:
 			(ex1_ask_head,ex1_ask_head_volume,ex1_bid_head,ex1_bid_head_volume)=exchanges[exch_pair[0]].get_orderbook_head()

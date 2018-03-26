@@ -203,9 +203,9 @@ class huobiUtil:
 			await self.get_account()
 		params={}
 		if is_market:
-			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'buy-market'}
+			params={"account-id": self.account_id,"amount": patch_amount, "symbol": self.CURRENT_PAIR,"type": 'buy-market'}
 		else:
-			params={"account-id": self.account_id,"amount": amount, "symbol": self.CURRENT_PAIR,"type": 'buy-limit',"price":rate}
+			params={"account-id": self.account_id,"amount": patch_amount, "symbol": self.CURRENT_PAIR,"type": 'buy-limit',"price":rate}
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None,self.api_key_post,params,'/v1/order/orders/place')
 		logger.debug('[huobi] buy request {}|{}|{}.get result:{}'.format(self.CURRENT_PAIR,rate,patch_amount,res))
