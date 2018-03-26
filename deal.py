@@ -21,6 +21,7 @@ import os
 import sys
 from exchange.poloniex import poloniexUtil
 from exchange.okex import okexUtil
+from exchange.huobi import huobi
 import time
 SUPPOR_PAIR='ETC_USDT'
 MAX_TRADE_SIZE=5

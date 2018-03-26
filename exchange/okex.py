@@ -13,7 +13,7 @@ logger = logging.getLogger("deal")
 
 class okexUtil:
 	def __init__(self,pair):
-		self.name='OKEX'
+		self.name='okex'
 		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt','LTC_USDT':'ltc_usdt'}
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=self.CURRENT_PAIR.split('_')
@@ -92,9 +92,17 @@ class okexUtil:
 		params={'order_id':orderId,'symbol':self.CURRENT_PAIR}
 		res = await loop.run_in_executor(None, self.handleRequest,'cancel_order.do',params)
 		if res is not None and res['result']==True:
-			return res
+			return res['orders']
 		else:
 			raise Exception(self.name,'Error happen in cancel order {}|{}'.format(orderId,pair))
+	async def order_info(self,orderId):
+		loop=asyncio.get_event_loop()
+		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{'order_id':orderId,'symbol':self.CURRENT_PAIR})
+		logger.debug('[OKEX] unfinished order get result:{}'.format(res))
+		if res is not None and res['result']==True:
+			return res
+		else:
+			raise Exception(self.name,'Error happen in order info {}|{}'.format(orderId,pair))
 
 	async def init_wallet(self):
 		loop=asyncio.get_event_loop()
@@ -196,6 +204,10 @@ class okexUtil:
 				param={'event':'ping'}
 				await self.websocket.send(json.dumps(param))
 				logger.info('Finish send ping message')
+	async def refresh_wallet(self):
+		while True:
+			await self.init_wallet()
+			await asyncio.sleep(300)
 	async def unfinish_order_handler(self):
 		res = await self.unfinish_order()
 		# if res is not None and len(res)>0:

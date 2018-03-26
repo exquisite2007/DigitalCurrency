@@ -49,8 +49,8 @@ class poloniexUtil:
 			for key in params.keys():
 				payload[key]=params[key]
 			paybytes = urlencode(payload).encode('utf8')
-			sign = hmac.new(self.secret_key, paybytes, hashlib.sha512).hexdigest()
-			headers = {'Key': self.access_key,'Sign': sign,'Content-Type':'application/x-www-form-urlencoded'}
+			sign = hmac.new(self.secret_key.encode(), paybytes, hashlib.sha512).hexdigest()
+			headers = {'Key': self.access_key.encode(),'Sign': sign,'Content-Type':'application/x-www-form-urlencoded'}
 			url = 'https://poloniex.com/tradingApi'
 			r = requests.post(url, headers=headers, data=paybytes)
 			return json.loads(r.text)

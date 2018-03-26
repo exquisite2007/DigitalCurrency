@@ -139,7 +139,6 @@ class huobiUtil:
 						elif 'tick' in message:
 							ask_head_all=str(message['tick']['asks'][0][0])+':'+str(message['tick']['asks'][0][1])
 							bid_head_all=str(message['tick']['bids'][0][0])+':'+str(message['tick']['bids'][0][1])
-							print (message)
 							if ask_head_all != self.ask_head_all or bid_head_all != self.bid_head_all:
 								self.ask_head_all=ask_head_all
 								self.bid_head_all=bid_head_all
@@ -181,6 +180,20 @@ class huobiUtil:
 			ask_heads=self.ask_head_all.split(':')
 			bid_heads=self.bid_head_all.split(':')
 			return (float(ask_heads[0]),float(ask_heads[1]),float(bid_heads[0]),float(bid_heads[1]))
+	def get_sell_info(self,rate):
+		if len(self.WALLET)<=0:
+			raise Exception(self.name,'Error in get_sell_info')
+		else:
+			avaliable_amount=self.WALLET[self.CURRENCY[0]]['free']
+			cost=self.TAKER_FEE*rate
+			return(avaliable_amount,cost)
+	def get_buy_info(self,rate):
+		if len(self.WALLET)<=0:
+			raise Exception(self.name,'Error in get_buy_info')
+		else:
+			avaliable_amount=self.WALLET[self.CURRENCY[1]]['free']/rate/(1+self.BUY_PATCH)
+			cost=self.TAKER_FEE*rate*(1+self.BUY_PATCH)
+			return(avaliable_amount,cost)
 
 	async def buy(self,rate,amount,is_market=False):
 		patch_amount=amount*(1+self.BUY_PATCH)	
@@ -224,7 +237,6 @@ class huobiUtil:
 		loop=asyncio.get_event_loop()
 		
 		res = await loop.run_in_executor(None, self.api_key_post,{},"/v1/order/orders/{0}/submitcancel".format(orderId))
-		print(res)
 		if res is not None and res['status']=='ok':
 			return res
 		else:
@@ -233,6 +245,7 @@ class huobiUtil:
 	async def get_account(self):
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.api_key_get,{},'/v1/account/accounts')
+		print(res)
 		self.account_id=res['data'][0]['id']
 
 
@@ -253,10 +266,12 @@ class huobiUtil:
 						elif item['type'] == 'frozen':
 							self.WALLET[cur]['locked']=float(item['balance'])
 			logger.info('Finish load huobi wallet:{}'.format(self.WALLET))
-			print(self.WALLET)
 		else:
 			raise Exception(self.name,'Error in init_wallet')
-
+	async def health_check(self):
+		while True:
+			await asyncio.sleep(30)
+			#
 async def test():
 	print('nothing here:{}'.format('larla'))
 def main(argv=None):
