@@ -94,7 +94,7 @@ async def trade_handler():
 				else:
 					results = await asyncio.gather(exchanges[exch_pair[0]].sell(ex1_bid_head,min_volume),exchanges[exch_pair[1]].buy(ex2_ask_head,min_volume),)
 					FINISH_TRADE_LST.append((ts,ex2_buy_ex1_sell_profit,min_volume,exchanges[exch_pair[0]].name,exchanges[exch_pair[1]].name,results[0],results[1]))
-					logger.info('[trade]Finish poloniex buy:{!r}. profit:{}'.format(results,ex2_buy_ex1_sell_profit))
+					logger.info('[trade]Finish buy:{!r}. profit:{}'.format(results,ex2_buy_ex1_sell_profit))
 			logger.debug('buy from {} sell to {}:{} - {} ={}'.format(
 				exchanges[exch_pair[0]].name,exchanges[exch_pair[1]].name,
 				ex2_bid_head,ex1_ask_head,ex2_buy_ex1_sell_profit))			
@@ -145,18 +145,18 @@ async def get_trade_info(request):
 	cursor.close()
 	return web.json_response(res)
 async def change_threshold(request):
-	# peername = request.transport.get_extra_info('peername')
-	# if peername is None:
-	# 	return web.json_response({'msg':'unknown source request'})
-	# if not (peername[0]=='45.62.107.169' or peername[0] =='172.96.18.216'or peername[0] == '127.0.0.1') :
-	# 	return  web.json_response({'msg':'you are forbidden!!!'})
+	peername = request.transport.get_extra_info('peername')
+	if peername is None:
+		return web.json_response({'msg':'unknown source request'})
+	if not (peername[0]=='45.62.107.169' or peername[0] =='172.96.18.216'or peername[0] == '127.0.0.1') :
+		return  web.json_response({'msg':'you are forbidden!!!'})
 	params = await request.json()
-	# if peername[0]=='172.96.18.216' or peername[0]=='127.0.0.1':
-	# 	print(params)
-	# 	randStr='I am really poor'+params['rand']
-	# 	sign=hmac.new(randStr.encode(),digestmod=hashlib.sha256).hexdigest()
-	# 	if 'sign' not in params or sign!=params['sign']:
-	# 		return web.json_response({'msg':'invalid signature!!!'})
+	if peername[0]=='172.96.18.216' or peername[0]=='127.0.0.1':
+		print(params)
+		randStr='I am really poor'+params['rand']
+		sign=hmac.new(randStr.encode(),digestmod=hashlib.sha256).hexdigest()
+		if 'sign' not in params or sign!=params['sign']:
+			return web.json_response({'msg':'invalid signature!!!'})
 	
 	key = params['key']
 	value = float(params['value'])
