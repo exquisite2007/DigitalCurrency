@@ -31,9 +31,11 @@ SELECT_SYSTEM_SQL='SELECT * from system'
 UPDATE_SYSTEM_SQL='update system set value=? where key=?'
 INSERT_SYSTEM_SQL='insert into system (key,value) values(?,?)'
 conn = sqlite3.connect('trade.db')
+LAST_TRADE_PRICE_KEY='GRID_LAST_TRADE_PRICE'
 LAST_TRADE_PRICE=None
 BASE_TRADE_AMOUNT=1
 TRADE_LOCK=False
+
 
 
 BUY_RATE_THRESHOLD=0.0196
@@ -56,6 +58,16 @@ def initAll():
 	else:
 		logger.error('please check you exchange access key exist in your environment')
 		sys.exit()
+	cursor = conn.cursor()
+	cursor.execute(CREATE_SYSTEM_SQL)
+	cursor.execute(SELECT_SYSTEM_SQL)
+	sysMap={}
+	for item in cursor.fetchall():
+		sysMap[item[1]]=item[2]
+	global LAST_TRADE_PRICE
+	global LAST_TRADE_PRICE_KEY
+	if LAST_TRADE_PRICE_KEY in sysMap:
+		LAST_TRADE_PRICE = float(sysMap[LAST_TRADE_PRICE_KEY])
 
 async def trade():
 	(ask1,bid1,last) = util.ticker_value
@@ -110,6 +122,7 @@ async def trade():
 			if ORDER_ID is None:#
 				pass#TODO:处理下跌太快
 			else:#从中下段 进入下段
+				order_res = await util.order_info(ORDER_ID)
 				if len(order_res)>0 and order_res[0]['status']==2:
 					LAST_TRADE_PRICE=(1-BUY_RATE_THRESHOLD)*LAST_TRADE_PRICE
 					ORDER_ID = None
@@ -120,10 +133,48 @@ async def trade():
 		logger.error("Trade_handler_error:{}".format(e))
 	TRADE_LOCK = False
 
+async def params_check():
+	while True:
+		await asyncio.sleep(60)
+		global LAST_TRADE_PRICE
+		global LAST_TRADE_PRICE_KEY
+		cursor = conn.cursor()
+		cursor.executemany(UPDATE_SYSTEM_SQL,[(LAST_TRADE_PRICE,LAST_TRADE_PRICE_KEY)])
+		cursor.connection.commit()
+		cursor.close()
+		logger.info('Finish params check')
+
 async def deal_handler():
 	initAll()
 	return await asyncio.wait([util.ticker(trade),util.health_check(),util.refresh_wallet()])
-loop=asyncio.get_event_loop()
-loop.run_until_complete(deal_handler())
 
 
+async def backgroud(app):
+	app.loop.create_task(deal_handler())
+async def get_sysconfig(request):
+	res={}
+	global LAST_TRADE_PRICE
+	global LAST_TRADE_PRICE_KEY
+	res[LAST_TRADE_PRICE_KEY]=LAST_TRADE_PRICE
+	return web.json_response(res)
+async def change_sysconfig(request):
+	peername = request.transport.get_extra_info('peername')
+	if peername is None:
+		return web.json_response({'msg':'unknown source request'})
+	if not (peername[0]=='45.62.107.169' or peername[0] =='172.96.18.216'or peername[0] == '127.0.0.1') :
+		return  web.json_response({'msg':'you are forbidden!!!'})
+	params = await request.json()
+	global LAST_TRADE_PRICE
+	global LAST_TRADE_PRICE_KEY
+	cursor = conn.cursor()
+	cursor.executemany(UPDATE_SYSTEM_SQL,[(params[LAST_TRADE_PRICE_KEY],LAST_TRADE_PRICE_KEY)])
+	cursor.connection.commit()
+	cursor.close()
+
+	LAST_TRADE_PRICE=float(params[LAST_TRADE_PRICE_KEY])
+	logger.info('position changed. key:{},value:{}'.format(LAST_TRADE_PRICE_KEY,LAST_TRADE_PRICE))
+app = web.Application()
+app.router.add_get('/sys_config', get_sysconfig)
+app.router.add_post('/sys_config', get_sysconfig)
+app.on_startup.append(backgroud)
+web.run_app(app,host='0.0.0.0',port=20184)
