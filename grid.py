@@ -109,32 +109,28 @@ async def trade():
 				(ok_avaliable_sell,ok_sell_one_cost)=util.get_sell_info(LAST_TRADE_PRICE*(1+SELL_RATE_THRESHOLD))
 				if ok_avaliable_sell> BASE_TRADE_AMOUNT:
 					ORDER_ID = await  util.sell(LAST_TRADE_PRICE*(1+SELL_RATE_THRESHOLD),BASE_TRADE_AMOUNT)
-					ORDER_CREATE_STATE ='LG'
+					ORDER_CREATE_STATE =STATE
 					logger.info('state <light green>:{},{}'.format(diff_rate,last))
 				else:
 					logger.info('not enough to sell')
-			elif ORDER_CREATE_STATE !='LG':
+			elif ORDER_CREATE_STATE !=STATE:
 				await util.cancel_order(ORDER_ID)
 				ORDER_ID=None
 				ORDER_CREATE_STATE=None
 				logger.info('cancel order in LG state')
 		elif (diff_rate< 0 and -diff_rate <= BUY_RATE_THRESHOLD /2) or(diff_rate>=0 and diff_rate <= SELL_RATE_THRESHOLD /2):
 			STATE='W'
-			if ORDER_ID is not None:
-				await util.cancel_order(ORDER_ID)
-				ORDER_ID=None
-				logger.info('state <white>:{},{}'.format(diff_rate,last))
 		elif -diff_rate > BUY_RATE_THRESHOLD /2 and -diff_rate < BUY_RATE_THRESHOLD:#中下段，法币多，数字币少
 			STATE='LR'
 			if ORDER_ID is None: 
 				(ok_avaliable_buy,ok_buy_one_cost)=util.get_buy_info(LAST_TRADE_PRICE*(1-BUY_RATE_THRESHOLD))
 				if ok_avaliable_buy >BASE_TRADE_AMOUNT:
 					ORDER_ID = await  util.buy(LAST_TRADE_PRICE*(1-BUY_RATE_THRESHOLD),BASE_TRADE_AMOUNT)
-					ORDER_CREATE_STATE ='LR'
+					ORDER_CREATE_STATE =STATE
 					logger.info('state <light red>:{},{}'.format(diff_rate,last))
 				else:
 					logger.info('not enough to buy')
-			elif ORDER_CREATE_STATE !='LR':
+			elif ORDER_CREATE_STATE !=STATE:
 				await util.cancel_order(ORDER_ID)
 				ORDER_ID=None
 				ORDER_CREATE_STATE=None
@@ -179,8 +175,15 @@ async def get_sysconfig(request):
 	global LAST_TRADE_PRICE
 	global LAST_TRADE_PRICE_KEY
 	global STATE
+	global ORDER_ID
+	global ORDER_CREATE_STATE
 	res[LAST_TRADE_PRICE_KEY]=LAST_TRADE_PRICE
 	res['state']=STATE
+	if ORDER_ID is None:
+		res['order_id']='empty'
+	else:
+		res['order_id']=ORDER_ID
+		res['order_create_state']=ORDER_CREATE_STATE
 	return web.json_response(res)
 async def change_sysconfig(request):
 	peername = request.transport.get_extra_info('peername')
@@ -200,6 +203,6 @@ async def change_sysconfig(request):
 	logger.info('position changed. key:{},value:{}'.format(LAST_TRADE_PRICE_KEY,LAST_TRADE_PRICE))
 app = web.Application()
 app.router.add_get('/sys_config', get_sysconfig)
-app.router.add_post('/sys_config', get_sysconfig)
+app.router.add_post('/sys_config', change_sysconfig)
 app.on_startup.append(backgroud)
 web.run_app(app,host='0.0.0.0',port=20184)
