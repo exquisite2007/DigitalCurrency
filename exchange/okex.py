@@ -95,16 +95,15 @@ class okexUtil:
 		logger.debug('[OKEX] cancel_order get result:{}'.format(res))
 		print(res)
 		if res is not None and res['result']==True:
-			return res['orders']
+			return res['order_id']
 		else:
 			raise Exception(self.name,'Error happen in cancel order {}|{}'.format(orderId,pair))
 	async def order_info(self,orderId):
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{'order_id':orderId,'symbol':self.CURRENT_PAIR})
 		logger.debug('[OKEX] order_info get result:{}'.format(res))
-		print(res)
 		if res is not None and res['result']==True:
-			return res
+			return res['orders']
 		else:
 			raise Exception(self.name,'Error happen in order info {}|{}'.format(orderId,pair))
 
