@@ -14,6 +14,7 @@ import sys
 import os
 import datetime
 from optparse import OptionParser
+import math
 try:
 	#python2
 	from urllib import urlencode
@@ -196,7 +197,8 @@ class huobiUtil:
 			return(avaliable_amount,cost)
 
 	async def buy(self,rate,amount,is_market=False):
-		patch_amount=amount*(1+self.BUY_PATCH)	
+		patch_amount=math.ceil(amount*(1+self.BUY_PATCH)*10000)/10000
+		rate=math.ceil(rate*100)/100
 		self.WALLET[self.CURRENCY[1]]['free']-=patch_amount*rate
 		self.WALLET[self.CURRENCY[1]]['locked']+=patch_amount*rate
 		if self.account_id==0:
@@ -214,6 +216,8 @@ class huobiUtil:
 
 		
 	async def sell(self,rate,amount,is_market=False):
+		amount=math.ceil(amount*(1+self.BUY_PATCH)*10000)/10000
+		rate=math.ceil(rate*100)/100
 		if self.WALLET is not None:
 			self.WALLET[self.CURRENCY[0]]['free']-=amount
 			self.WALLET[self.CURRENCY[0]]['locked']+=amount
