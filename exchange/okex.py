@@ -82,6 +82,7 @@ class okexUtil:
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{'symbol':self.CURRENT_PAIR,'order_id':-1})
 		logger.debug('[OKEX] unfinished order get result:{}'.format(res))
+		print(res)
 		if res is not None and res['result']==True:
 			return res['orders']
 		else:
@@ -91,6 +92,8 @@ class okexUtil:
 		loop=asyncio.get_event_loop()
 		params={'order_id':orderId,'symbol':self.CURRENT_PAIR}
 		res = await loop.run_in_executor(None, self.handleRequest,'cancel_order.do',params)
+		logger.debug('[OKEX] cancel_order get result:{}'.format(res))
+		print(res)
 		if res is not None and res['result']==True:
 			return res['orders']
 		else:
@@ -98,7 +101,8 @@ class okexUtil:
 	async def order_info(self,orderId):
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{'order_id':orderId,'symbol':self.CURRENT_PAIR})
-		logger.debug('[OKEX] unfinished order get result:{}'.format(res))
+		logger.debug('[OKEX] order_info get result:{}'.format(res))
+		print(res)
 		if res is not None and res['result']==True:
 			return res
 		else:
@@ -235,16 +239,18 @@ def main(argv=None):
 	loop=asyncio.get_event_loop()
 
 	
-	if 'ok_access_key' not in os.environ:
+	if 'okex_access_key' not in os.environ:
 		return
-	util.access_key=os.environ['ok_access_key']
-	util.secret_key=os.environ['ok_secret_key']
+	util.access_key=os.environ['okex_access_key']
+	util.secret_key=os.environ['okex_secret_key']
 	(opts, args) = parser.parse_args(argv)
 
-	if int(opts.mode) == 0:
-		loop.run_until_complete(util.unfinish_order())
-	if int(opts.mode) ==1:
-		loop.run_until_complete(util.order_book(test))
+	# if int(opts.mode) == 0:
+	# 	loop.run_until_complete(util.unfinish_order())
+	# if int(opts.mode) ==1:
+	# 	loop.run_until_complete(util.order_book(test))
+
+	loop.run_until_complete(util.unfinish_order())
 
 if __name__ == "__main__":
 	sys.exit(main())
