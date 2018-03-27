@@ -152,7 +152,7 @@ async def change_threshold(request):
 	if not (peername[0]=='45.62.107.169' or peername[0] =='172.96.18.216'or peername[0] == '127.0.0.1') :
 		return  web.json_response({'msg':'you are forbidden!!!'})
 	params = await request.json()
-	if peername[0]=='172.96.18.216' or peername[0]=='127.0.0.1':
+	if peername[0]=='172.96.18.216':
 		print(params)
 		randStr='I am really poor'+params['rand']
 		sign=hmac.new(randStr.encode(),digestmod=hashlib.sha256).hexdigest()
