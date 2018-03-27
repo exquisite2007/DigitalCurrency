@@ -35,6 +35,7 @@ LAST_TRADE_PRICE_KEY='GRID_LAST_TRADE_PRICE'
 LAST_TRADE_PRICE=None
 BASE_TRADE_AMOUNT=1
 TRADE_LOCK=False
+STATE='W'
 
 
 BUY_RATE_THRESHOLD=0.0099
@@ -50,6 +51,7 @@ SELL_RATE_THRESHOLD=0.01
 # BUY_RATE_THRESHOLD=0.16668
 # SELL_RATE_THRESHOLD=0.2
 ORDER_ID=None #为空表示没有挂单，非空表示有挂单
+ORDER_CREATE_STATE=None#创建订单时的状态，为减少无效订单
 
 def initAll():
 	logger.debug('start init all')
@@ -75,6 +77,8 @@ async def trade():
 	logger.info('{},{},{}'.format(ask1,bid1,last))
 	global TRADE_LOCK
 	global ORDER_ID
+	global ORDER_CREATE_STATE
+	global STATE
 	global LAST_TRADE_PRICE
 	if LAST_TRADE_PRICE is None:
 		LAST_TRADE_PRICE=last
@@ -88,6 +92,7 @@ async def trade():
 	try:
 		diff_rate = (last -LAST_TRADE_PRICE)/LAST_TRADE_PRICE
 		if diff_rate >SELL_RATE_THRESHOLD: #上段，数字币远多于法币
+			STATE='DG'
 			if ORDER_ID is None:#
 				pass#TODO:处理上涨太快
 			else:#从中上段 进入上段
@@ -99,27 +104,44 @@ async def trade():
 				else:
 					logger.error('error for confirm ordier:{}'.format(ORDER_ID))
 		elif diff_rate >  SELL_RATE_THRESHOLD/2 and  diff_rate <= SELL_RATE_THRESHOLD:#中上段，法币少，数字币多
+			STATE='LG'
 			if ORDER_ID is None: 
 				(ok_avaliable_sell,ok_sell_one_cost)=util.get_sell_info(LAST_TRADE_PRICE*(1+SELL_RATE_THRESHOLD))
 				if ok_avaliable_sell> BASE_TRADE_AMOUNT:
 					ORDER_ID = await  util.sell(LAST_TRADE_PRICE*(1+SELL_RATE_THRESHOLD),BASE_TRADE_AMOUNT)
+					ORDER_CREATE_STATE ='LG'
 					logger.info('state <light green>:{},{}'.format(diff_rate,last))
 				else:
-					logger.info('no enough to sell')
+					logger.info('not enough to sell')
+			elif ORDER_CREATE_STATE !='LG':
+				await util.cancel_order(ORDER_ID)
+				ORDER_ID=None
+				ORDER_CREATE_STATE=None
+				logger.info('cancel order in LG state')
 		elif (diff_rate< 0 and -diff_rate <= BUY_RATE_THRESHOLD /2) or(diff_rate>=0 and diff_rate <= SELL_RATE_THRESHOLD /2):
+			STATE='W'
 			if ORDER_ID is not None:
 				await util.cancel_order(ORDER_ID)
 				ORDER_ID=None
 				logger.info('state <white>:{},{}'.format(diff_rate,last))
 		elif -diff_rate > BUY_RATE_THRESHOLD /2 and -diff_rate < BUY_RATE_THRESHOLD:#中下段，法币多，数字币少
+			STATE='LR'
 			if ORDER_ID is None: 
 				(ok_avaliable_buy,ok_buy_one_cost)=util.get_buy_info(LAST_TRADE_PRICE*(1-BUY_RATE_THRESHOLD))
 				if ok_avaliable_buy >BASE_TRADE_AMOUNT:
 					ORDER_ID = await  util.buy(LAST_TRADE_PRICE*(1-BUY_RATE_THRESHOLD),BASE_TRADE_AMOUNT)
+					ORDER_CREATE_STATE ='LR'
 					logger.info('state <light red>:{},{}'.format(diff_rate,last))
 				else:
-					logger.info('no enough to buy')
+					logger.info('not enough to buy')
+			elif ORDER_CREATE_STATE !='LR':
+				await util.cancel_order(ORDER_ID)
+				ORDER_ID=None
+				ORDER_CREATE_STATE=None
+				logger.info('cancel order in LG state')
+
 		elif  -diff_rate > BUY_RATE_THRESHOLD:#下段，法币远多于数字币，不平衡状态
+			STATE='DG'
 			if ORDER_ID is None:#
 				pass#TODO:处理下跌太快
 			else:#从中下段 进入下段
@@ -127,7 +149,7 @@ async def trade():
 				if len(order_res)>0 and order_res[0]['status']==2:
 					LAST_TRADE_PRICE=(1-BUY_RATE_THRESHOLD)*LAST_TRADE_PRICE
 					ORDER_ID = None
-					logger.info('state <dark green>:{},{}'.format(util.WALLET,LAST_TRADE_PRICE))
+					logger.info('state <dark red>:{},{}'.format(util.WALLET,LAST_TRADE_PRICE))
 				else:
 					logger.error('error for confirm ordier:{}'.format(ORDER_ID))
 	except Exception as e:
@@ -147,7 +169,7 @@ async def params_check():
 
 async def deal_handler():
 	initAll()
-	return await asyncio.wait([util.ticker(trade),util.health_check(),util.refresh_wallet()])
+	return await asyncio.wait([util.ticker(trade),util.health_check(),util.refresh_wallet(),params_check()])
 
 
 async def backgroud(app):
@@ -156,7 +178,9 @@ async def get_sysconfig(request):
 	res={}
 	global LAST_TRADE_PRICE
 	global LAST_TRADE_PRICE_KEY
+	global STATE
 	res[LAST_TRADE_PRICE_KEY]=LAST_TRADE_PRICE
+	res['state']=STATE
 	return web.json_response(res)
 async def change_sysconfig(request):
 	peername = request.transport.get_extra_info('peername')
