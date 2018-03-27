@@ -19,7 +19,6 @@ logger.addHandler(ch)
 import sqlite3
 import os
 import sys
-from exchange.fake import fakeUtil
 from exchange.okex import okexUtil
 import time
 
@@ -32,8 +31,6 @@ SELECT_SYSTEM_SQL='SELECT * from system'
 UPDATE_SYSTEM_SQL='update system set value=? where key=?'
 INSERT_SYSTEM_SQL='insert into system (key,value) values(?,?)'
 conn = sqlite3.connect('trade.db')
-DIGITAL_COIN_NUM=None
-FIAT_COIN_NUM=None
 LAST_TRADE_PRICE=None
 BASE_TRADE_AMOUNT=1
 TRADE_LOCK=False
@@ -54,8 +51,8 @@ ORDER_ID=None #为空表示没有挂单，非空表示有挂单
 def initAll():
 	logger.debug('start init all')
 	if 'okex_access_key' in os.environ:
-		okexUtil.access_key=os.environ['okex_access_key']
-		okexUtil.secret_key=os.environ['okex_secret_key']
+		util.access_key=os.environ['okex_access_key']
+		util.secret_key=os.environ['okex_secret_key']
 	else:
 		logger.error('please check you exchange access key exist in your environment')
 		sys.exit()
@@ -65,8 +62,6 @@ async def trade():
 	logger.info('{},{},{}'.format(ask1,bid1,last))
 	global TRADE_LOCK
 	global ORDER_ID
-	global DIGITAL_COIN_NUM
-	global FIAT_COIN_NUM
 	global LAST_TRADE_PRICE
 	if LAST_TRADE_PRICE is None:
 		LAST_TRADE_PRICE=last
@@ -95,7 +90,7 @@ async def trade():
 				(ok_avaliable_sell,ok_sell_one_cost)=util.get_sell_info(LAST_TRADE_PRICE*(1+SELL_RATE_THRESHOLD))
 				if ok_avaliable_sell> BASE_TRADE_AMOUNT:
 					ORDER_ID = await  util.sell(LAST_TRADE_PRICE*(1+SELL_RATE_THRESHOLD),BASE_TRADE_AMOUNT)
-					logger.info('state <light green>:{},{},{}'.format(FIAT_COIN_NUM,DIGITAL_COIN_NUM,last))
+					logger.info('state <light green>:{},{}'.format(diff_rate,last))
 				else:
 					logger.info('no enough to sell')
 		elif (diff_rate< 0 and -diff_rate <= BUY_RATE_THRESHOLD /2) or(diff_rate>=0 and diff_rate <= SELL_RATE_THRESHOLD /2):
