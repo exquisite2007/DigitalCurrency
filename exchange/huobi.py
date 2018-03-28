@@ -93,6 +93,7 @@ class huobiUtil:
 		self.bid_head_all=None
 		self.ticker_value=None
 		self.account_id=0
+		self.NEED_RECONNECT=False
 	access_key=None
 	secret_key=None
 	def api_key_get(self,params, request_path):
@@ -132,7 +133,8 @@ class huobiUtil:
 				try:
 					param={'sub':'market.'+self.CURRENT_PAIR+'.depth.step0','id':'5201314'}
 					await websocket.send(json.dumps(param))	
-					while True:
+					self.NEED_RECONNECT=False
+					while not self.NEED_RECONNECT:
 						msg=await websocket.recv()
 						message = json.loads(gzip.decompress(msg).decode("utf-8"))	
 						if 'ping' in message:
@@ -272,8 +274,16 @@ class huobiUtil:
 		else:
 			raise Exception(self.name,'Error in init_wallet')
 	async def health_check(self):
+		huobi_ask_head_all='begin'
+		huobi_bid_head_all='begin'
 		while True:
-			await asyncio.sleep(30)
+			await asyncio.sleep(300)
+			if huobi_bid_head_all == self.bid_head_all or huobi_ask_head_all== self.ask_head_all:
+				logger.error("huobi order head update die !!!")
+				self.NEED_RECONNECT=True
+			else:
+				huobi_bid_head_all = self.bid_head_all
+				huobi_ask_head_all = self.ask_head_all
 			#
 async def test():
 	print('nothing here:{}'.format('larla'))
