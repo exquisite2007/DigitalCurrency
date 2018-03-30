@@ -24,7 +24,7 @@ from exchange.okex import okexUtil
 from exchange.huobi import huobiUtil
 import time
 SUPPORT_PAIR='ETC_USDT'
-MAX_TRADE_SIZE=0.1
+MAX_TRADE_SIZE=5
 poloniexUtil=poloniexUtil(SUPPORT_PAIR)
 huobiUtil = huobiUtil(SUPPORT_PAIR)
 exchanges=[poloniexUtil,huobiUtil]
