@@ -8,7 +8,7 @@ import logging
 import asyncio
 import websockets
 import random
-
+from exchange.okex import okexUtil
 logger = logging.getLogger("deal")
 
 class fakeUtil:
@@ -17,7 +17,7 @@ class fakeUtil:
 		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt','LTC_USDT':'ltc_usdt'}
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=self.CURRENT_PAIR.split('_')
-		self.WALLET={}
+		self.WALLET={self.CURRENCY[0]:{'free':30},self.CURRENCY[1]:{'free':600}}
 		self.ORDER_BOOK={}
 		self.TAKER_FEE=0.002
 		# 补偿，买一个币，只能得到（1-self.TAKER_FEE）个币，为了保证两边币的数量一致，增加一个补偿量
@@ -26,6 +26,8 @@ class fakeUtil:
 		self.bid_head_all=None
 		self.ticker_value=None
 		self.interval=1
+		self.order=None
+		self.otherUtil=okexUtil(pair)
 	access_key=None
 	secret_key=None
 
@@ -33,22 +35,21 @@ class fakeUtil:
 
 	async def buy(self,rate,amount,is_market=False):
 		await asyncio.sleep(self.interval)
-		self.WALLET[self.CURRENCY[0]]['free']+=amount*0.998
-		self.WALLET[self.CURRENCY[1]]['free']-=amount*rate
+		self.order={'type':'buy','price':rate,'amount':amount}
 		return random.randrange(1000000,20000000)
 
 
 		
 	async def sell(self,rate,amount,is_market=False):
 		await asyncio.sleep(self.interval)
-		self.WALLET[self.CURRENCY[0]]['free']-=amount
-		self.WALLET[self.CURRENCY[1]]['free']+=amount*rate *0.998
+		self.order={'type':'sell','price':rate,'amount':amount}
 		return random.randrange(1000000,20000000)
 	async def unfinish_order(self):
 		await asyncio.sleep(self.interval)
 
 	async def cancel_order(self,orderId):
 		await asyncio.sleep(self.interval)
+		self.order=None
 
 	async def init_wallet(self):
 		await asyncio.sleep(self.interval)
@@ -94,4 +95,24 @@ class fakeUtil:
 		# 			cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
 		# 			if cancel_res is not None and cancel_res['result']==True:
 		# 				await self.buy(head_res[0],item['amount'])
+	async def trade_handler_wrapper(self,trade_handler):
+		if self.otherUtil.ticker_value is None:
+			return
+		(ask1,bid1,last) = self.otherUtil.ticker_value
+		if  self.order is not None and self.order['type']=='buy' and last<self.order['price']:
+			self.WALLET[self.CURRENCY[0]]['free']+=self.order['amount']*0.998
+			self.WALLET[self.CURRENCY[1]]['free']-=self.order['amount']*self.order['price']
+		if  self.order is not None and self.order['type']=='sell' and last>self.order['price']:
+			self.WALLET[self.CURRENCY[0]]['free']-=self.order['amount']
+			self.WALLET[self.CURRENCY[1]]['free']+=self.order['amount']*self.order['price'] *0.998
+		await trade_handler()
+	async def ticker(self,trade_handler):
+		await self.otherUtil.ticker(trade_handler)
+
+	async def health_check(self):
+		await self.otherUtil.health_check()
+	async def refresh_wallet(self):
+		while True:
+			await asyncio.sleep(300)
+			await self.init_wallet()
 
