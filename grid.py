@@ -24,8 +24,8 @@ from exchange.fake import fakeUtil
 import time
 
 SUPPOR_PAIR='ETC_USDT'
-# util=okexUtil(SUPPOR_PAIR)
-util=fakeUtil(SUPPOR_PAIR)
+util=okexUtil(SUPPOR_PAIR)
+# util=fakeUtil(SUPPOR_PAIR)
 
 
 
@@ -44,7 +44,7 @@ STATE='W'
 FINISH_TRADE_LST=[]
 
 
-SELL_RATE_THRESHOLD=0.005
+SELL_RATE_THRESHOLD=0.01
 BUY_RATE_THRESHOLD=SELL_RATE_THRESHOLD/(1+SELL_RATE_THRESHOLD)
 # BUY_RATE_THRESHOLD=0.0099
 # SELL_RATE_THRESHOLD=0.01
@@ -109,8 +109,8 @@ async def trade():
 		if diff_rate >SELL_RATE_THRESHOLD: #上段，数字币远多于法币
 			STATE='DG'
 			if ORDER_ID is None:#
-				LAST_TRADE_PRICE=last
-				logger.error('price grow too fast,force chande last price:{}'.format('LAST_TRADE_PRICE'))
+				LAST_TRADE_PRICE=(1+SELL_RATE_THRESHOLD)*LAST_TRADE_PRICE
+				logger.error('price grow too fast,force chande last price:{}'.format(LAST_TRADE_PRICE))
 			else:#从中上段 进入上段
 				order_res = await util.order_info(ORDER_ID)
 				if len(order_res)>0 and order_res[0]['status']==2:
@@ -156,8 +156,8 @@ async def trade():
 		elif  -diff_rate > BUY_RATE_THRESHOLD:#下段，法币远多于数字币，不平衡状态
 			STATE='DG'
 			if ORDER_ID is None:#
-				LAST_TRADE_PRICE=last
-				logger.error('price drop too fast,force chande last price:{}'.format('LAST_TRADE_PRICE'))
+				LAST_TRADE_PRICE=(1-BUY_RATE_THRESHOLD)*LAST_TRADE_PRICE
+				logger.error('price drop too fast,force chande last price:{}'.format(LAST_TRADE_PRICE))
 			else:#从中下段 进入下段
 				order_res = await util.order_info(ORDER_ID)
 				if len(order_res)>0 and order_res[0]['status']==2:
