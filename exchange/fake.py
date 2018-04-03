@@ -98,6 +98,7 @@ class fakeUtil:
 	async def trade_handler_wrapper(self):
 		if self.otherUtil.ticker_value is None:
 			return
+		self.ticker_value=self.otherUtil.ticker_value
 		(ask1,bid1,last) = self.otherUtil.ticker_value
 		if  self.order is not None and self.order['type']=='buy' and last<self.order['price']:
 			self.WALLET[self.CURRENCY[0]]['free']+=self.order['amount']*0.998
