@@ -54,7 +54,8 @@ class fakeUtil:
 	async def init_wallet(self):
 		await asyncio.sleep(self.interval)
 		logger.info('current wallet info {!r}'.format(self.WALLET))
-
+	async def order_info(self,orderId):
+		return [{'status':2}]
 		
 
 
