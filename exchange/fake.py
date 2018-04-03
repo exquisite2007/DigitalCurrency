@@ -95,7 +95,7 @@ class fakeUtil:
 		# 			cancel_res= await self.cancel_order(item['order_id'],item['symbol'])
 		# 			if cancel_res is not None and cancel_res['result']==True:
 		# 				await self.buy(head_res[0],item['amount'])
-	async def trade_handler_wrapper(self,trade_handler):
+	async def trade_handler_wrapper(self):
 		if self.otherUtil.ticker_value is None:
 			return
 		(ask1,bid1,last) = self.otherUtil.ticker_value
@@ -105,9 +105,10 @@ class fakeUtil:
 		if  self.order is not None and self.order['type']=='sell' and last>self.order['price']:
 			self.WALLET[self.CURRENCY[0]]['free']-=self.order['amount']
 			self.WALLET[self.CURRENCY[1]]['free']+=self.order['amount']*self.order['price'] *0.998
-		await trade_handler()
+		await self.trade_handler()
 	async def ticker(self,trade_handler):
-		await self.otherUtil.ticker(trade_handler)
+		self.trade_handler=trade_handler
+		await self.otherUtil.ticker(self.trade_handler_wrapper)
 
 	async def health_check(self):
 		await self.otherUtil.health_check()
