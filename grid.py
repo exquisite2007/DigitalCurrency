@@ -42,6 +42,7 @@ BASE_TRADE_AMOUNT=3
 TRADE_LOCK=False
 STATE='W'
 FINISH_TRADE_LST=[]
+PRICE_LOCK=0# 0-无锁 1-阻止上涨 2-阻止下跌
 
 
 SELL_RATE_THRESHOLD=0.01
@@ -99,6 +100,7 @@ async def trade():
 
 	global BUY_RATE_THRESHOLD
 	global SELL_RATE_THRESHOLD
+	global PRICE_LOCK
 	if TRADE_LOCK:
 		logger.debug('Ignore ticker')
 		return
@@ -108,7 +110,7 @@ async def trade():
 		diff_rate = (last -LAST_TRADE_PRICE)/LAST_TRADE_PRICE
 		if diff_rate >SELL_RATE_THRESHOLD: #上段，数字币远多于法币
 			STATE='DG'
-			if ORDER_ID is None and diff_rate >1.5*SELL_RATE_THRESHOLD:#
+			if ORDER_ID is None and diff_rate >1.5*SELL_RATE_THRESHOLD and PRICE_LOCK != 1:#
 				LAST_TRADE_PRICE=(1+SELL_RATE_THRESHOLD)*LAST_TRADE_PRICE
 				logger.error('price grow too fast,force chande last price:{}'.format(LAST_TRADE_PRICE))
 			else:#从中上段 进入上段
@@ -125,10 +127,12 @@ async def trade():
 			if ORDER_ID is None: 
 				(ok_avaliable_sell,ok_sell_one_cost)=util.get_sell_info(LAST_TRADE_PRICE*(1+SELL_RATE_THRESHOLD))
 				if ok_avaliable_sell> BASE_TRADE_AMOUNT:
+					PRICE_LOCK=0
 					ORDER_ID = await  util.sell(LAST_TRADE_PRICE*(1+SELL_RATE_THRESHOLD),BASE_TRADE_AMOUNT)
 					ORDER_CREATE_STATE =STATE
 					logger.info('state <light green>:{},{}'.format(diff_rate,last))
 				else:
+					PRICE_LOCK=1
 					logger.info('not enough to sell')
 			elif ORDER_CREATE_STATE !=STATE:
 				await util.cancel_order(ORDER_ID)
@@ -142,10 +146,12 @@ async def trade():
 			if ORDER_ID is None: 
 				(ok_avaliable_buy,ok_buy_one_cost)=util.get_buy_info(LAST_TRADE_PRICE*(1-BUY_RATE_THRESHOLD))
 				if ok_avaliable_buy >BASE_TRADE_AMOUNT:
+					PRICE_LOCK=0
 					ORDER_ID = await  util.buy(LAST_TRADE_PRICE*(1-BUY_RATE_THRESHOLD),BASE_TRADE_AMOUNT)
 					ORDER_CREATE_STATE =STATE
 					logger.info('state <light red>:{},{}'.format(diff_rate,last))
 				else:
+					PRICE_LOCK=2
 					logger.info('not enough to buy')
 			elif ORDER_CREATE_STATE !=STATE:
 				await util.cancel_order(ORDER_ID)
@@ -154,8 +160,8 @@ async def trade():
 				logger.info('cancel order in LG state')
 
 		elif  -diff_rate > BUY_RATE_THRESHOLD:
-			STATE='DG'
-			if ORDER_ID is None and -diff_rate> 1.5 * BUY_RATE_THRESHOLD:#
+			STATE='DR'
+			if ORDER_ID is None and -diff_rate> 1.5 * BUY_RATE_THRESHOLD and PRICE_LOCK != 2:#
 				LAST_TRADE_PRICE=(1-BUY_RATE_THRESHOLD)*LAST_TRADE_PRICE
 				logger.error('price drop too fast,force chande last price:{}'.format(LAST_TRADE_PRICE))
 			else:#从中下段 进入下段
