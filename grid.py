@@ -108,7 +108,7 @@ async def trade():
 		diff_rate = (last -LAST_TRADE_PRICE)/LAST_TRADE_PRICE
 		if diff_rate >SELL_RATE_THRESHOLD: #上段，数字币远多于法币
 			STATE='DG'
-			if ORDER_ID is None:#
+			if ORDER_ID is None and diff_rate >1.5*SELL_RATE_THRESHOLD:#
 				LAST_TRADE_PRICE=(1+SELL_RATE_THRESHOLD)*LAST_TRADE_PRICE
 				logger.error('price grow too fast,force chande last price:{}'.format(LAST_TRADE_PRICE))
 			else:#从中上段 进入上段
@@ -153,9 +153,9 @@ async def trade():
 				ORDER_CREATE_STATE=None
 				logger.info('cancel order in LG state')
 
-		elif  -diff_rate > BUY_RATE_THRESHOLD:#下段，法币远多于数字币，不平衡状态
+		elif  -diff_rate > BUY_RATE_THRESHOLD:
 			STATE='DG'
-			if ORDER_ID is None:#
+			if ORDER_ID is None and -diff_rate> 1.5 * BUY_RATE_THRESHOLD:#
 				LAST_TRADE_PRICE=(1-BUY_RATE_THRESHOLD)*LAST_TRADE_PRICE
 				logger.error('price drop too fast,force chande last price:{}'.format(LAST_TRADE_PRICE))
 			else:#从中下段 进入下段

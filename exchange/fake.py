@@ -17,7 +17,7 @@ class fakeUtil:
 		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt','LTC_USDT':'ltc_usdt'}
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=self.CURRENT_PAIR.split('_')
-		self.WALLET={self.CURRENCY[0]:{'free':30},self.CURRENCY[1]:{'free':600}}
+		self.WALLET={self.CURRENCY[0]:{'free':1000},self.CURRENCY[1]:{'free':100000}}
 		self.ORDER_BOOK={}
 		self.TAKER_FEE=0.002
 		# 补偿，买一个币，只能得到（1-self.TAKER_FEE）个币，为了保证两边币的数量一致，增加一个补偿量
