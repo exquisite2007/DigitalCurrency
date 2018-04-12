@@ -97,7 +97,7 @@ class okexUtil:
 		if res is not None and 'result' in res and res['result']==True:
 			return res['order_id']
 		else:
-			raise Exception(self.name,'Error happen in cancel order {}|{}'.format(orderId,pair))
+			raise Exception(self.name,'Error happen in cancel order {}|{}'.format(orderId,self.CURRENT_PAIR))
 	async def order_info(self,orderId):
 		loop=asyncio.get_event_loop()
 		res = await loop.run_in_executor(None, self.handleRequest,'order_info.do',{'order_id':orderId,'symbol':self.CURRENT_PAIR})
@@ -105,7 +105,7 @@ class okexUtil:
 		if res is not None  and res['result']==True:
 			return res['orders']
 		else:
-			raise Exception(self.name,'Error happen in order info {}|{}'.format(orderId,pair))
+			raise Exception(self.name,'Error happen in order info {}|{}'.format(orderId,self.CURRENT_PAIR))
 
 	async def init_wallet(self):
 		loop=asyncio.get_event_loop()
