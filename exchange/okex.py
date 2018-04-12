@@ -249,7 +249,7 @@ def main(argv=None):
 	# if int(opts.mode) ==1:
 	# 	loop.run_until_complete(util.order_book(test))
 
-	loop.run_until_complete(util.unfinish_order())
+	loop.run_until_complete(util.order_info(222424127))
 
 if __name__ == "__main__":
 	sys.exit(main())
