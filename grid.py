@@ -113,7 +113,7 @@ async def trade():
 			if ORDER_ID is None and diff_rate >1.5*SELL_RATE_THRESHOLD and PRICE_LOCK != 1:#
 				LAST_TRADE_PRICE=(1+SELL_RATE_THRESHOLD)*LAST_TRADE_PRICE
 				logger.error('price grow too fast,force chande last price:{}'.format(LAST_TRADE_PRICE))
-			elif ORDER_ID is not None#从中上段 进入上段
+			elif ORDER_ID is not None:#从中上段 进入上段
 				order_res = await util.order_info(ORDER_ID)
 				if len(order_res)>0 and order_res[0]['status']==2:
 					LAST_TRADE_PRICE=(1+SELL_RATE_THRESHOLD)*LAST_TRADE_PRICE
