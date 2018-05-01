@@ -14,7 +14,7 @@ logger = logging.getLogger("deal")
 class okexUtil:
 	def __init__(self,pair):
 		self.name='okex'
-		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt','LTC_USDT':'ltc_usdt'}
+		self.PAIR_MAP={'BTC_ETH':'eth_btc','BTC_LTC':'ltc_btc','BTC_USDT':'btc_usdt','ETH_LTC':'ltc_eth','ETC_USDT':'etc_usdt','LTC_USDT':'ltc_usdt','ETC_OKB':'etc_okb'}
 		self.CURRENT_PAIR=self.PAIR_MAP[pair]
 		self.CURRENCY=self.CURRENT_PAIR.split('_')
 		self.WALLET={}
@@ -234,7 +234,7 @@ def main(argv=None):
 	parser.add_option("-r", "--rate", dest="rate", help="rate")
 	parser.add_option("-a", "--amount", dest="amount", help="amount")
 	parser.set_defaults(mode=1)
-	util=okexUtil('ETC_USDT')
+	util=okexUtil('ETC_OKB')
 	loop=asyncio.get_event_loop()
 
 	
