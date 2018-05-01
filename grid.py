@@ -23,7 +23,7 @@ from exchange.okex import okexUtil
 from exchange.fake import fakeUtil
 import time
 
-SUPPOR_PAIR='ETC_USDT'
+SUPPOR_PAIR='ETC_OKB'
 util=okexUtil(SUPPOR_PAIR)
 # util=fakeUtil(SUPPOR_PAIR)
 
@@ -38,14 +38,14 @@ INSERT_TRADE_SQL='insert into trade (ts,price,amount,type)values(?,?,?,?)'
 conn = sqlite3.connect('trade.db')
 LAST_TRADE_PRICE_KEY='GRID_LAST_TRADE_PRICE'
 LAST_TRADE_PRICE=None
-BASE_TRADE_AMOUNT=3
+BASE_TRADE_AMOUNT=0.2
 TRADE_LOCK=False
 STATE='W'
 FINISH_TRADE_LST=[]
 PRICE_LOCK=0# 0-无锁 1-阻止上涨 2-阻止下跌
 
 
-SELL_RATE_THRESHOLD=0.01
+SELL_RATE_THRESHOLD=0.005
 BUY_RATE_THRESHOLD=SELL_RATE_THRESHOLD/(1+SELL_RATE_THRESHOLD)
 # BUY_RATE_THRESHOLD=0.0099
 # SELL_RATE_THRESHOLD=0.01
