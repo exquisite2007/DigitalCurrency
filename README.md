@@ -9,7 +9,7 @@ trades.py
 2. 存入sqlite，以此可以用matplotlib进行画图展示进行分析
 
 为节省开支，每天的信息生成文件，可通过免费的七牛文件服务（10GB）上传。
-
+![compare](/compare.png)
 
 ## 网格交易法
 ----
